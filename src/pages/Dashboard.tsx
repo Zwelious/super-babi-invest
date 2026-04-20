@@ -89,16 +89,27 @@ const Dashboard = () => {
     try {
       const fileExt = selectedFile.name.split('.').pop();
       const filePath = `${userId}/${selectedDepositId}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from("receipts").upload(filePath, selectedFile, { upsert: true });
+      const { error: uploadError } = await supabase.storage.from("receipts").upload(filePath, selectedFile, {
+        upsert: true,
+        contentType: selectedFile.type,
+      });
       if (uploadError) throw uploadError;
 
-      // Update deposit with receipt URL via edge function
-      const { data: { publicUrl } } = supabase.storage.from("receipts").getPublicUrl(filePath);
-      
+      // Persist the storage path on the deposit row via the admin edge function
+      // (regular users have no UPDATE policy on deposits)
+      const { error: updateError } = await supabase.functions.invoke("admin-api", {
+        body: { action: "update_deposit_receipt", id: selectedDepositId, receipt_url: filePath },
+      });
+      if (updateError) throw updateError;
+
       toast({ title: t("Receipt uploaded", "Bukti transfer diunggah") });
       setUploadOpen(false);
       setSelectedFile(null);
       setSelectedDepositId(null);
+
+      // Refresh deposits so the UI reflects the new receipt
+      const { data } = await supabase.from("deposits").select("*").order("created_at", { ascending: false });
+      if (data) setDeposits(data);
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
     } finally {

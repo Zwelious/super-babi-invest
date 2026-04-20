@@ -13,9 +13,7 @@ Deno.serve(async (req) => {
   try {
     const adminPassword = "Password123";
     const authHeader = req.headers.get("x-admin-password");
-    if (authHeader !== adminPassword) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
+    const isAdmin = authHeader === adminPassword;
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -23,6 +21,26 @@ Deno.serve(async (req) => {
     );
 
     const { action, ...params } = await req.json();
+
+    // Allow authenticated users (non-admin) to attach a receipt to their own deposit
+    if (!isAdmin) {
+      if (action !== "update_deposit_receipt") {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const userJwt = req.headers.get("authorization")?.replace("Bearer ", "");
+      if (!userJwt) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const { data: userData, error: userErr } = await supabase.auth.getUser(userJwt);
+      if (userErr || !userData.user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const { data: dep, error: depErr } = await supabase.from("deposits").select("user_id").eq("id", params.id).single();
+      if (depErr || !dep || dep.user_id !== userData.user.id) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
+
 
     switch (action) {
       case "get_members": {
@@ -61,6 +79,18 @@ Deno.serve(async (req) => {
         }
         const enriched = data.map((d: any) => ({ ...d, member_name: d.profiles?.full_name || "Unknown" }));
         return new Response(JSON.stringify(enriched), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      case "update_deposit_receipt": {
+        const { error } = await supabase.from("deposits").update({ receipt_url: params.receipt_url }).eq("id", params.id);
+        if (error) throw error;
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      case "get_receipt_signed_url": {
+        const { data, error } = await supabase.storage.from("receipts").createSignedUrl(params.path, 3600);
+        if (error) throw error;
+        return new Response(JSON.stringify({ url: data.signedUrl }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       case "approve_deposit": {
