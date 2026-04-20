@@ -63,6 +63,18 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify(enriched), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
+      case "update_deposit_receipt": {
+        const { error } = await supabase.from("deposits").update({ receipt_url: params.receipt_url }).eq("id", params.id);
+        if (error) throw error;
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      case "get_receipt_signed_url": {
+        const { data, error } = await supabase.storage.from("receipts").createSignedUrl(params.path, 3600);
+        if (error) throw error;
+        return new Response(JSON.stringify({ url: data.signedUrl }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
       case "approve_deposit": {
         const { error } = await supabase.from("deposits").update({ status: "approved" }).eq("id", params.id);
         if (error) throw error;
