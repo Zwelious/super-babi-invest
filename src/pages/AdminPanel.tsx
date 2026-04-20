@@ -241,7 +241,26 @@ const AdminPanel = () => {
                             <TableCell className="font-medium">{d.member_name}</TableCell>
                             <TableCell>{formatRp(Number(d.amount))}</TableCell>
                             <TableCell>{d.deposit_date}</TableCell>
-                            <TableCell>{d.receipt_url ? <Badge variant="outline">Uploaded</Badge> : <Badge variant="secondary">None</Badge>}</TableCell>
+                            <TableCell>
+                              {d.receipt_url ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={async () => {
+                                    try {
+                                      const res = await adminCall("get_receipt_signed_url", { path: d.receipt_url });
+                                      if (res?.url) window.open(res.url, "_blank", "noopener,noreferrer");
+                                    } catch (err: any) {
+                                      toast({ title: err.message, variant: "destructive" });
+                                    }
+                                  }}
+                                >
+                                  View
+                                </Button>
+                              ) : (
+                                <Badge variant="secondary">None</Badge>
+                              )}
+                            </TableCell>
                             <TableCell className="flex gap-2">
                               <Button size="sm" onClick={() => handleAction("approve_deposit", { id: d.id }, "Deposit approved")}><Check className="h-3 w-3" /></Button>
                               <Button size="sm" variant="destructive" onClick={() => handleAction("reject_deposit", { id: d.id }, "Deposit rejected")}><X className="h-3 w-3" /></Button>
