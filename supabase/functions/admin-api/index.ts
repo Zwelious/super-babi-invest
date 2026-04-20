@@ -203,9 +203,13 @@ Deno.serve(async (req) => {
       }
 
       case "get_deposit_chart": {
-        const { data, error } = await supabase.from("deposits").select("deposit_date, amount").order("deposit_date");
+        const { data, error } = await supabase
+          .from("deposits")
+          .select("deposit_date, amount, status")
+          .in("status", ["approved", "activated"])
+          .order("deposit_date");
         if (error) throw error;
-        // Aggregate by month
+        // Aggregate by month (only approved/activated deposits count)
         const monthMap: Record<string, number> = {};
         (data || []).forEach((d: any) => {
           const m = d.deposit_date.substring(0, 7); // YYYY-MM
