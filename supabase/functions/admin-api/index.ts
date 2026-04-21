@@ -154,7 +154,20 @@ Deno.serve(async (req) => {
       }
 
       case "add_rate": {
-        const { error } = await supabase.from("master_rates").insert({ rate: params.rate, effective_date: params.effective_date });
+        const rateNum = Number(params.rate);
+        if (!Number.isFinite(rateNum) || rateNum <= 0) {
+          return new Response(
+            JSON.stringify({ error: "Rate must be a number greater than 0" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+        if (!params.effective_date) {
+          return new Response(
+            JSON.stringify({ error: "Effective date is required" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+        const { error } = await supabase.from("master_rates").insert({ rate: rateNum, effective_date: params.effective_date });
         if (error) throw error;
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
