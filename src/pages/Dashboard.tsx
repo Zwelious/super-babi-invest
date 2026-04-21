@@ -95,21 +95,12 @@ const Dashboard = () => {
 
   const handleDeposit = async () => {
     if (!userId) return;
-    if (!depositFile) {
-      toast({
-        title: t("Receipt required", "Bukti transfer wajib diunggah"),
-        description: t(
-          "Please attach a transfer receipt image (JPG, PNG, WEBP, GIF — max 5 MB).",
-          "Harap lampirkan gambar bukti transfer (JPG, PNG, WEBP, GIF — maks 5 MB)."
-        ),
-        variant: "destructive",
-      });
-      return;
-    }
-    const fileError = validateReceiptFile(depositFile);
-    if (fileError) {
-      toast({ title: fileError, variant: "destructive" });
-      return;
+    if (depositFile) {
+      const fileError = validateReceiptFile(depositFile);
+      if (fileError) {
+        toast({ title: fileError, variant: "destructive" });
+        return;
+      }
     }
     setLoading(true);
     try {
