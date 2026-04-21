@@ -346,7 +346,7 @@ const Dashboard = () => {
                 </Card>
 
                 <div className="space-y-2">
-                  <Label>{t("Transfer Receipt", "Bukti Transfer")} <span className="text-destructive">*</span></Label>
+                  <Label>{t("Transfer Receipt", "Bukti Transfer")} <span className="text-muted-foreground text-xs font-normal">({t("optional", "opsional")})</span></Label>
                   <Input
                     type="file"
                     accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
