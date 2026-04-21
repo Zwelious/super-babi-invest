@@ -112,19 +112,21 @@ const Dashboard = () => {
         .single();
       if (error) throw error;
 
-      // 2. Upload receipt
-      const fileExt = depositFile.name.split(".").pop();
-      const filePath = `${userId}/${deposit.id}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from("receipts")
-        .upload(filePath, depositFile, { upsert: true, contentType: depositFile.type });
-      if (uploadError) throw uploadError;
+      // 2. Upload receipt (only if provided)
+      if (depositFile) {
+        const fileExt = depositFile.name.split(".").pop();
+        const filePath = `${userId}/${deposit.id}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from("receipts")
+          .upload(filePath, depositFile, { upsert: true, contentType: depositFile.type });
+        if (uploadError) throw uploadError;
 
-      // 3. Persist receipt path via admin edge function
-      const { error: updateError } = await supabase.functions.invoke("admin-api", {
-        body: { action: "update_deposit_receipt", id: deposit.id, receipt_url: filePath },
-      });
-      if (updateError) throw updateError;
+        // 3. Persist receipt path via admin edge function
+        const { error: updateError } = await supabase.functions.invoke("admin-api", {
+          body: { action: "update_deposit_receipt", id: deposit.id, receipt_url: filePath },
+        });
+        if (updateError) throw updateError;
+      }
 
       toast({ title: t("Deposit submitted", "Setoran terkirim") });
       setDepositOpen(false);
