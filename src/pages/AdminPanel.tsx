@@ -519,10 +519,18 @@ const AdminPanel = () => {
                       </div>
                       <div className="space-y-2"><Label>Title</Label><Input value={notifyTitle} onChange={(e) => setNotifyTitle(e.target.value)} placeholder="Investment Adjustment Notice" /></div>
                       <div className="space-y-2"><Label>Message</Label><Textarea value={notifyMessage} onChange={(e) => setNotifyMessage(e.target.value)} placeholder="Describe the impact..." rows={5} /></div>
-                      <Button className="w-full" onClick={async () => {
-                        await handleAction("send_notification", { user_id: notifyMemberId, title: notifyTitle, message: notifyMessage, type: "swine_death" }, "Notification sent");
-                        setNotifyDialogOpen(false); setNotifyTitle(""); setNotifyMessage(""); setNotifyMemberId("");
-                      }}>Send Notification</Button>
+                      <Button
+                        className="w-full"
+                        disabled={!notifyMemberId || !notifyTitle.trim() || !notifyMessage.trim()}
+                        onClick={async () => {
+                          if (!notifyMemberId || !notifyTitle.trim() || !notifyMessage.trim()) {
+                            toast({ title: "Please fill in all fields", variant: "destructive" });
+                            return;
+                          }
+                          await handleAction("send_notification", { user_id: notifyMemberId, title: notifyTitle.trim(), message: notifyMessage.trim(), type: "swine_death" }, "Notification sent");
+                          setNotifyDialogOpen(false); setNotifyTitle(""); setNotifyMessage(""); setNotifyMemberId("");
+                        }}
+                      >Send Notification</Button>
                     </div>
                   </DialogContent>
                 </Dialog>
