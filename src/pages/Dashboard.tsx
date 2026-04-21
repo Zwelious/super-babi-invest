@@ -95,17 +95,50 @@ const Dashboard = () => {
 
   const handleDeposit = async () => {
     if (!userId) return;
+    if (!depositFile) {
+      toast({
+        title: t("Receipt required", "Bukti transfer wajib diunggah"),
+        description: t(
+          "Please attach a transfer receipt image (JPG, PNG, WEBP, GIF — max 5 MB).",
+          "Harap lampirkan gambar bukti transfer (JPG, PNG, WEBP, GIF — maks 5 MB)."
+        ),
+        variant: "destructive",
+      });
+      return;
+    }
+    const fileError = validateReceiptFile(depositFile);
+    if (fileError) {
+      toast({ title: fileError, variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
-      const { error } = await supabase.from("deposits").insert({
-        user_id: userId,
-        units: depositUnits,
-        amount: depositAmount,
-      });
+      // 1. Insert deposit row
+      const { data: deposit, error } = await supabase
+        .from("deposits")
+        .insert({ user_id: userId, units: depositUnits, amount: depositAmount })
+        .select()
+        .single();
       if (error) throw error;
-      toast({ title: t("Deposit recorded", "Setoran tercatat") });
+
+      // 2. Upload receipt
+      const fileExt = depositFile.name.split(".").pop();
+      const filePath = `${userId}/${deposit.id}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from("receipts")
+        .upload(filePath, depositFile, { upsert: true, contentType: depositFile.type });
+      if (uploadError) throw uploadError;
+
+      // 3. Persist receipt path via admin edge function
+      const { error: updateError } = await supabase.functions.invoke("admin-api", {
+        body: { action: "update_deposit_receipt", id: deposit.id, receipt_url: filePath },
+      });
+      if (updateError) throw updateError;
+
+      toast({ title: t("Deposit submitted", "Setoran terkirim") });
       setDepositOpen(false);
       setDepositUnits(1);
+      setDepositFile(null);
       // Refresh
       const { data } = await supabase.from("deposits").select("*").order("created_at", { ascending: false });
       if (data) setDeposits(data);
@@ -118,6 +151,11 @@ const Dashboard = () => {
 
   const handleUploadReceipt = async () => {
     if (!selectedFile || !selectedDepositId) return;
+    const fileError = validateReceiptFile(selectedFile);
+    if (fileError) {
+      toast({ title: fileError, variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       const fileExt = selectedFile.name.split('.').pop();
