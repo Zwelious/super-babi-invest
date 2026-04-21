@@ -30,6 +30,23 @@ const Dashboard = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedDepositId, setSelectedDepositId] = useState<string | null>(null);
+  const [depositFile, setDepositFile] = useState<File | null>(null);
+
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+
+  const validateReceiptFile = (file: File): string | null => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return t(
+        "Invalid format. Only image files (JPG, PNG, WEBP, GIF) are allowed.",
+        "Format tidak valid. Hanya file gambar (JPG, PNG, WEBP, GIF) yang diizinkan."
+      );
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return t("File too large. Maximum size is 5 MB.", "File terlalu besar. Ukuran maksimum 5 MB.");
+    }
+    return null;
+  };
 
   const formatRp = (n: number) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
