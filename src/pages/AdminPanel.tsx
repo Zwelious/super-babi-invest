@@ -348,21 +348,41 @@ const AdminPanel = () => {
                       </div>
                       <div className="space-y-2">
                         <Label>Investment</Label>
-                        <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={disbInvestmentId} onChange={(e) => setDisbInvestmentId(e.target.value)}>
+                        <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={disbInvestmentId} onChange={(e) => {
+                          const id = e.target.value;
+                          setDisbInvestmentId(id);
+                          const inv = investments.find(i => i.id === id);
+                          if (inv && disbType) {
+                            const auto = disbType === "interest_6" ? Number(inv.return_6) : disbType === "interest_12" ? Number(inv.return_12) : disbType === "investment_return" ? Number(inv.amount) : 0;
+                            if (auto > 0) setDisbAmount(String(auto));
+                          }
+                        }}>
                           <option value="">Select investment...</option>
                           {investments.filter(i => i.user_id === disbMemberId).map(i => <option key={i.id} value={i.id}>{formatRp(Number(i.amount))} - {i.activation_date}</option>)}
                         </select>
                       </div>
                       <div className="space-y-2">
                         <Label>Type</Label>
-                        <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={disbType} onChange={(e) => setDisbType(e.target.value)}>
+                        <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={disbType} onChange={(e) => {
+                          const t = e.target.value;
+                          setDisbType(t);
+                          const inv = investments.find(i => i.id === disbInvestmentId);
+                          if (inv && t) {
+                            const auto = t === "interest_6" ? Number(inv.return_6) : t === "interest_12" ? Number(inv.return_12) : t === "investment_return" ? Number(inv.amount) : 0;
+                            if (auto > 0) setDisbAmount(String(auto));
+                          }
+                        }}>
                           <option value="">Select...</option>
                           <option value="interest_6">Interest (6-month)</option>
                           <option value="interest_12">Interest (12-month)</option>
                           <option value="investment_return">Investment Return</option>
                         </select>
                       </div>
-                      <div className="space-y-2"><Label>Amount (Rp)</Label><Input type="number" value={disbAmount} onChange={(e) => setDisbAmount(e.target.value)} /></div>
+                      <div className="space-y-2">
+                        <Label>Amount (Rp)</Label>
+                        <Input type="number" value={disbAmount} onChange={(e) => setDisbAmount(e.target.value)} />
+                        <p className="text-xs text-muted-foreground">Auto-filled from the investment + type. You can override if needed.</p>
+                      </div>
                       <div className="space-y-2"><Label>Date</Label><Input type="date" value={disbDate} onChange={(e) => setDisbDate(e.target.value)} /></div>
                       <Button className="w-full" onClick={async () => {
                         await handleAction("add_disbursement", { user_id: disbMemberId, investment_id: disbInvestmentId, amount: Number(disbAmount), type: disbType, disbursement_date: disbDate }, "Disbursement recorded");
