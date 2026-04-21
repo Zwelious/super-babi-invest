@@ -303,8 +303,8 @@ const Dashboard = () => {
                       <TableCell>{d.units}</TableCell>
                       <TableCell>{formatRp(Number(d.amount))}</TableCell>
                       <TableCell>
-                        <Badge variant={d.status === "approved" ? "default" : d.status === "rejected" ? "destructive" : "secondary"}>
-                          {d.status === "approved" ? t("Approved", "Disetujui") : d.status === "rejected" ? t("Rejected", "Ditolak") : t("Pending", "Menunggu")}
+                        <Badge variant={d.status === "approved" || d.status === "activated" ? "default" : d.status === "rejected" ? "destructive" : "secondary"}>
+                          {d.status === "activated" ? t("Activated", "Aktif") : d.status === "approved" ? t("Approved", "Disetujui") : d.status === "rejected" ? t("Rejected", "Ditolak") : t("Pending", "Menunggu")}
                         </Badge>
                       </TableCell>
                     </TableRow>
