@@ -384,7 +384,19 @@ const AdminPanel = () => {
                         <Input type="number" value={disbAmount} onChange={(e) => setDisbAmount(e.target.value)} />
                         <p className="text-xs text-muted-foreground">Auto-filled from the investment + type. You can override if needed.</p>
                       </div>
-                      <div className="space-y-2"><Label>Date</Label><Input type="date" value={disbDate} onChange={(e) => setDisbDate(e.target.value)} /></div>
+                      {(() => {
+                        const selectedInv = investments.find(i => i.id === disbInvestmentId);
+                        const minDate = selectedInv?.activation_date;
+                        return (
+                          <div className="space-y-2">
+                            <Label>Date</Label>
+                            <Input type="date" value={disbDate} min={minDate} onChange={(e) => setDisbDate(e.target.value)} />
+                            {minDate && (
+                              <p className="text-xs text-muted-foreground">Must be on or after the investment activation date ({minDate}).</p>
+                            )}
+                          </div>
+                        );
+                      })()}
                       <Button
                         className="w-full"
                         disabled={!disbMemberId || !disbInvestmentId || !disbType || !disbDate || !disbAmount || Number(disbAmount) <= 0}
@@ -396,6 +408,11 @@ const AdminPanel = () => {
                           const amt = Number(disbAmount);
                           if (!Number.isFinite(amt) || amt <= 0) {
                             toast({ title: "Amount must be greater than 0", variant: "destructive" });
+                            return;
+                          }
+                          const selectedInv = investments.find(i => i.id === disbInvestmentId);
+                          if (selectedInv && disbDate < selectedInv.activation_date) {
+                            toast({ title: `Disbursement date cannot be earlier than the investment activation date (${selectedInv.activation_date})`, variant: "destructive" });
                             return;
                           }
                           await handleAction("add_disbursement", { user_id: disbMemberId, investment_id: disbInvestmentId, amount: amt, type: disbType, disbursement_date: disbDate }, "Disbursement recorded");
