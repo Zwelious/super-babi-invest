@@ -56,6 +56,7 @@ const AdminPanel = () => {
   const [disbDate, setDisbDate] = useState("");
   const [disbMemberId, setDisbMemberId] = useState("");
   const [disbInvestmentId, setDisbInvestmentId] = useState("");
+  const [viewNotification, setViewNotification] = useState<any>(null);
 
   const adminCall = useCallback(async (action: string, params: any = {}) => {
     const { data, error } = await supabase.functions.invoke("admin-api", {
