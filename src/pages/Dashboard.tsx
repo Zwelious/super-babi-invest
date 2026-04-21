@@ -40,7 +40,14 @@ const Dashboard = () => {
       if (!user) { navigate("/login"); return; }
       setUserId(user.id);
 
-      const today = new Date().toISOString().split("T")[0];
+      // Use Asia/Jakarta (WIB) date so rates effective "today" in Indonesia
+      // are picked up regardless of the user's UTC offset.
+      const today = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Jakarta",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date());
       const [investRes, depositRes, rateRes] = await Promise.all([
         supabase.from("investments").select("*").order("activation_date", { ascending: false }),
         supabase.from("deposits").select("*").order("created_at", { ascending: false }),
