@@ -30,6 +30,23 @@ const Dashboard = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedDepositId, setSelectedDepositId] = useState<string | null>(null);
+  const [depositFile, setDepositFile] = useState<File | null>(null);
+
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+
+  const validateReceiptFile = (file: File): string | null => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return t(
+        "Invalid format. Only image files (JPG, PNG, WEBP, GIF) are allowed.",
+        "Format tidak valid. Hanya file gambar (JPG, PNG, WEBP, GIF) yang diizinkan."
+      );
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return t("File too large. Maximum size is 5 MB.", "File terlalu besar. Ukuran maksimum 5 MB.");
+    }
+    return null;
+  };
 
   const formatRp = (n: number) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
@@ -78,17 +95,50 @@ const Dashboard = () => {
 
   const handleDeposit = async () => {
     if (!userId) return;
+    if (!depositFile) {
+      toast({
+        title: t("Receipt required", "Bukti transfer wajib diunggah"),
+        description: t(
+          "Please attach a transfer receipt image (JPG, PNG, WEBP, GIF — max 5 MB).",
+          "Harap lampirkan gambar bukti transfer (JPG, PNG, WEBP, GIF — maks 5 MB)."
+        ),
+        variant: "destructive",
+      });
+      return;
+    }
+    const fileError = validateReceiptFile(depositFile);
+    if (fileError) {
+      toast({ title: fileError, variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
-      const { error } = await supabase.from("deposits").insert({
-        user_id: userId,
-        units: depositUnits,
-        amount: depositAmount,
-      });
+      // 1. Insert deposit row
+      const { data: deposit, error } = await supabase
+        .from("deposits")
+        .insert({ user_id: userId, units: depositUnits, amount: depositAmount })
+        .select()
+        .single();
       if (error) throw error;
-      toast({ title: t("Deposit recorded", "Setoran tercatat") });
+
+      // 2. Upload receipt
+      const fileExt = depositFile.name.split(".").pop();
+      const filePath = `${userId}/${deposit.id}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from("receipts")
+        .upload(filePath, depositFile, { upsert: true, contentType: depositFile.type });
+      if (uploadError) throw uploadError;
+
+      // 3. Persist receipt path via admin edge function
+      const { error: updateError } = await supabase.functions.invoke("admin-api", {
+        body: { action: "update_deposit_receipt", id: deposit.id, receipt_url: filePath },
+      });
+      if (updateError) throw updateError;
+
+      toast({ title: t("Deposit submitted", "Setoran terkirim") });
       setDepositOpen(false);
       setDepositUnits(1);
+      setDepositFile(null);
       // Refresh
       const { data } = await supabase.from("deposits").select("*").order("created_at", { ascending: false });
       if (data) setDeposits(data);
@@ -101,6 +151,11 @@ const Dashboard = () => {
 
   const handleUploadReceipt = async () => {
     if (!selectedFile || !selectedDepositId) return;
+    const fileError = validateReceiptFile(selectedFile);
+    if (fileError) {
+      toast({ title: fileError, variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       const fileExt = selectedFile.name.split('.').pop();
@@ -296,7 +351,40 @@ const Dashboard = () => {
                     </div>
                   </CardContent>
                 </Card>
-                <Button className="w-full" onClick={handleDeposit} disabled={loading}>
+
+                <div className="space-y-2">
+                  <Label>{t("Transfer Receipt", "Bukti Transfer")} <span className="text-destructive">*</span></Label>
+                  <Input
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] || null;
+                      if (f) {
+                        const err = validateReceiptFile(f);
+                        if (err) {
+                          toast({ title: err, variant: "destructive" });
+                          e.target.value = "";
+                          setDepositFile(null);
+                          return;
+                        }
+                      }
+                      setDepositFile(f);
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      "Accepted formats: JPG, PNG, WEBP, GIF. Max size: 5 MB.",
+                      "Format yang diterima: JPG, PNG, WEBP, GIF. Ukuran maks: 5 MB."
+                    )}
+                  </p>
+                  {depositFile && (
+                    <p className="text-xs text-primary">
+                      {depositFile.name} ({(depositFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </p>
+                  )}
+                </div>
+
+                <Button className="w-full" onClick={handleDeposit} disabled={loading || !depositFile}>
                   {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   {t("Submit Deposit", "Kirim Setoran")}
                 </Button>
@@ -304,6 +392,7 @@ const Dashboard = () => {
             </DialogContent>
           </Dialog>
 
+          {deposits.filter(d => d.status === "pending" && !d.receipt_url).length > 0 && (
           <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
             <DialogTrigger asChild>
               <Button size="lg" variant="outline"><Upload className="h-4 w-4 mr-1" />{t("Upload Receipt", "Unggah Bukti Transfer")}</Button>
@@ -313,33 +402,50 @@ const Dashboard = () => {
                 <DialogTitle className="font-display">{t("Upload Transfer Receipt", "Unggah Bukti Transfer")}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-2">
-                {deposits.filter(d => d.status === "pending").length > 0 ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label>{t("Select Deposit", "Pilih Setoran")}</Label>
-                      <select
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        value={selectedDepositId || ""}
-                        onChange={(e) => setSelectedDepositId(e.target.value)}
-                      >
-                        <option value="">{t("Select...", "Pilih...")}</option>
-                        {deposits.filter(d => d.status === "pending").map(d => (
-                          <option key={d.id} value={d.id}>{d.deposit_date} - {formatRp(Number(d.amount))}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <Input type="file" accept="image/*,.pdf" onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} />
-                    <Button className="w-full" onClick={handleUploadReceipt} disabled={loading || !selectedFile || !selectedDepositId}>
-                      {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                      {t("Upload", "Unggah")}
-                    </Button>
-                  </>
-                ) : (
-                  <p className="text-muted-foreground text-sm">{t("No pending deposits to upload receipt for.", "Tidak ada setoran menunggu untuk diunggah buktinya.")}</p>
-                )}
+                <div className="space-y-2">
+                  <Label>{t("Select Deposit", "Pilih Setoran")}</Label>
+                  <select
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={selectedDepositId || ""}
+                    onChange={(e) => setSelectedDepositId(e.target.value)}
+                  >
+                    <option value="">{t("Select...", "Pilih...")}</option>
+                    {deposits.filter(d => d.status === "pending" && !d.receipt_url).map(d => (
+                      <option key={d.id} value={d.id}>{d.deposit_date} - {formatRp(Number(d.amount))}</option>
+                    ))}
+                  </select>
+                </div>
+                <Input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] || null;
+                    if (f) {
+                      const err = validateReceiptFile(f);
+                      if (err) {
+                        toast({ title: err, variant: "destructive" });
+                        e.target.value = "";
+                        setSelectedFile(null);
+                        return;
+                      }
+                    }
+                    setSelectedFile(f);
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t(
+                    "Accepted formats: JPG, PNG, WEBP, GIF. Max size: 5 MB.",
+                    "Format yang diterima: JPG, PNG, WEBP, GIF. Ukuran maks: 5 MB."
+                  )}
+                </p>
+                <Button className="w-full" onClick={handleUploadReceipt} disabled={loading || !selectedFile || !selectedDepositId}>
+                  {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  {t("Upload", "Unggah")}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
+          )}
         </div>
       </main>
     </div>
