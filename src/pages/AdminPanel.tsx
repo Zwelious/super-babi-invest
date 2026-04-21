@@ -56,6 +56,7 @@ const AdminPanel = () => {
   const [disbDate, setDisbDate] = useState("");
   const [disbMemberId, setDisbMemberId] = useState("");
   const [disbInvestmentId, setDisbInvestmentId] = useState("");
+  const [viewNotification, setViewNotification] = useState<any>(null);
 
   const adminCall = useCallback(async (action: string, params: any = {}) => {
     const { data, error } = await supabase.functions.invoke("admin-api", {
@@ -384,11 +385,24 @@ const AdminPanel = () => {
                         <p className="text-xs text-muted-foreground">Auto-filled from the investment + type. You can override if needed.</p>
                       </div>
                       <div className="space-y-2"><Label>Date</Label><Input type="date" value={disbDate} onChange={(e) => setDisbDate(e.target.value)} /></div>
-                      <Button className="w-full" onClick={async () => {
-                        await handleAction("add_disbursement", { user_id: disbMemberId, investment_id: disbInvestmentId, amount: Number(disbAmount), type: disbType, disbursement_date: disbDate }, "Disbursement recorded");
-                        setDisbursementDialogOpen(false);
-                        setDisbType(""); setDisbAmount(""); setDisbDate(""); setDisbMemberId(""); setDisbInvestmentId("");
-                      }}>Record</Button>
+                      <Button
+                        className="w-full"
+                        disabled={!disbMemberId || !disbInvestmentId || !disbType || !disbDate || !disbAmount || Number(disbAmount) <= 0}
+                        onClick={async () => {
+                          if (!disbMemberId || !disbInvestmentId || !disbType || !disbDate) {
+                            toast({ title: "Please fill in all fields", variant: "destructive" });
+                            return;
+                          }
+                          const amt = Number(disbAmount);
+                          if (!Number.isFinite(amt) || amt <= 0) {
+                            toast({ title: "Amount must be greater than 0", variant: "destructive" });
+                            return;
+                          }
+                          await handleAction("add_disbursement", { user_id: disbMemberId, investment_id: disbInvestmentId, amount: amt, type: disbType, disbursement_date: disbDate }, "Disbursement recorded");
+                          setDisbursementDialogOpen(false);
+                          setDisbType(""); setDisbAmount(""); setDisbDate(""); setDisbMemberId(""); setDisbInvestmentId("");
+                        }}
+                      >Record</Button>
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -505,10 +519,18 @@ const AdminPanel = () => {
                       </div>
                       <div className="space-y-2"><Label>Title</Label><Input value={notifyTitle} onChange={(e) => setNotifyTitle(e.target.value)} placeholder="Investment Adjustment Notice" /></div>
                       <div className="space-y-2"><Label>Message</Label><Textarea value={notifyMessage} onChange={(e) => setNotifyMessage(e.target.value)} placeholder="Describe the impact..." rows={5} /></div>
-                      <Button className="w-full" onClick={async () => {
-                        await handleAction("send_notification", { user_id: notifyMemberId, title: notifyTitle, message: notifyMessage, type: "swine_death" }, "Notification sent");
-                        setNotifyDialogOpen(false); setNotifyTitle(""); setNotifyMessage(""); setNotifyMemberId("");
-                      }}>Send Notification</Button>
+                      <Button
+                        className="w-full"
+                        disabled={!notifyMemberId || !notifyTitle.trim() || !notifyMessage.trim()}
+                        onClick={async () => {
+                          if (!notifyMemberId || !notifyTitle.trim() || !notifyMessage.trim()) {
+                            toast({ title: "Please fill in all fields", variant: "destructive" });
+                            return;
+                          }
+                          await handleAction("send_notification", { user_id: notifyMemberId, title: notifyTitle.trim(), message: notifyMessage.trim(), type: "swine_death" }, "Notification sent");
+                          setNotifyDialogOpen(false); setNotifyTitle(""); setNotifyMessage(""); setNotifyMemberId("");
+                        }}
+                      >Send Notification</Button>
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -517,7 +539,7 @@ const AdminPanel = () => {
                 <p className="text-sm text-muted-foreground mb-4">Use this to notify members when a swine dies, affecting their deposit value and total investment returns.</p>
                 {notifications.length === 0 ? <p className="text-muted-foreground text-sm">No notifications sent yet.</p> : (
                   <Table>
-                    <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Member</TableHead><TableHead>Title</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Member</TableHead><TableHead>Title</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {notifications.map((n) => (
                         <TableRow key={n.id}>
@@ -525,6 +547,9 @@ const AdminPanel = () => {
                           <TableCell>{n.member_name}</TableCell>
                           <TableCell>{n.title}</TableCell>
                           <TableCell>{n.read ? <Badge variant="secondary">Read</Badge> : <Badge variant="destructive">Unread</Badge>}</TableCell>
+                          <TableCell>
+                            <Button size="sm" variant="outline" onClick={() => setViewNotification(n)}>View</Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -534,6 +559,29 @@ const AdminPanel = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <Dialog open={!!viewNotification} onOpenChange={(open) => { if (!open) setViewNotification(null); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="font-display">{viewNotification?.title}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>To: <strong className="text-foreground">{viewNotification?.member_name}</strong></span>
+                <span>{viewNotification && new Date(viewNotification.created_at).toLocaleString("id-ID", { timeZone: "Asia/Jakarta", dateStyle: "short", timeStyle: "short" })} WIB</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant={viewNotification?.type === "swine_death" ? "destructive" : "secondary"}>
+                  {viewNotification?.type === "swine_death" ? "Swine Loss" : "General"}
+                </Badge>
+                {viewNotification?.read ? <Badge variant="secondary">Read</Badge> : <Badge variant="destructive">Unread</Badge>}
+              </div>
+              <div className="rounded-md border bg-muted/30 p-4 text-sm leading-relaxed whitespace-pre-wrap">
+                {viewNotification?.message}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
