@@ -40,15 +40,24 @@ const Dashboard = () => {
       if (!user) { navigate("/login"); return; }
       setUserId(user.id);
 
+      const today = new Date().toISOString().split("T")[0];
       const [investRes, depositRes, rateRes] = await Promise.all([
         supabase.from("investments").select("*").order("activation_date", { ascending: false }),
         supabase.from("deposits").select("*").order("created_at", { ascending: false }),
-        supabase.from("master_rates").select("*").order("effective_date", { ascending: false }).limit(1),
+        // Only consider rates whose effective_date is today or earlier — future-dated rates
+        // should not affect transactions made before they take effect.
+        supabase
+          .from("master_rates")
+          .select("*")
+          .lte("effective_date", today)
+          .order("effective_date", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(1),
       ]);
 
       if (investRes.data) setInvestments(investRes.data);
       if (depositRes.data) setDeposits(depositRes.data);
-      if (rateRes.data?.[0]) setMasterRate(rateRes.data[0].rate);
+      if (rateRes.data?.[0]) setMasterRate(Number(rateRes.data[0].rate));
     };
     init();
   }, [navigate]);

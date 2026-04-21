@@ -113,9 +113,15 @@ Deno.serve(async (req) => {
         const mat12 = new Date(actDate);
         mat12.setMonth(mat12.getMonth() + 12);
 
-        // Get current rate
-        const { data: rates } = await supabase.from("master_rates").select("rate").order("effective_date", { ascending: false }).limit(1);
-        const rate = rates?.[0]?.rate || 30;
+        // Get rate effective on the activation date (ignore future-dated rates)
+        const { data: rates } = await supabase
+          .from("master_rates")
+          .select("rate")
+          .lte("effective_date", activation_date)
+          .order("effective_date", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(1);
+        const rate = Number(rates?.[0]?.rate) || 30;
         const return6 = amount * (rate / 200);
         const return12 = amount * (rate / 100);
 
@@ -154,7 +160,20 @@ Deno.serve(async (req) => {
       }
 
       case "add_rate": {
-        const { error } = await supabase.from("master_rates").insert({ rate: params.rate, effective_date: params.effective_date });
+        const rateNum = Number(params.rate);
+        if (!Number.isFinite(rateNum) || rateNum <= 0) {
+          return new Response(
+            JSON.stringify({ error: "Rate must be a number greater than 0" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+        if (!params.effective_date) {
+          return new Response(
+            JSON.stringify({ error: "Effective date is required" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+        const { error } = await supabase.from("master_rates").insert({ rate: rateNum, effective_date: params.effective_date });
         if (error) throw error;
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }

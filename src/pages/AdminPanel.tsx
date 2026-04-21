@@ -406,11 +406,19 @@ const AdminPanel = () => {
                   <DialogContent>
                     <DialogHeader><DialogTitle className="font-display">Set New Rate</DialogTitle></DialogHeader>
                     <div className="space-y-4 pt-2">
-                      <div className="space-y-2"><Label>Annual Rate (%)</Label><Input type="number" value={newRate} onChange={(e) => setNewRate(e.target.value)} placeholder="30" /></div>
+                      <div className="space-y-2">
+                        <Label>Annual Rate (%)</Label>
+                        <Input type="number" min={0.01} step="0.01" value={newRate} onChange={(e) => setNewRate(e.target.value)} placeholder="30" />
+                        <p className="text-xs text-muted-foreground">Must be greater than 0.</p>
+                      </div>
                       <div className="space-y-2"><Label>Effective Date</Label><Input type="date" value={newRateDate} onChange={(e) => setNewRateDate(e.target.value)} /></div>
-                      <Button className="w-full" disabled={!newRate || !newRateDate} onClick={async () => {
-                        if (!newRate || !newRateDate) return;
-                        await handleAction("add_rate", { rate: Number(newRate), effective_date: newRateDate }, "Rate updated");
+                      <Button className="w-full" disabled={!newRate || !newRateDate || Number(newRate) <= 0} onClick={async () => {
+                        const rateNum = Number(newRate);
+                        if (!newRateDate || !Number.isFinite(rateNum) || rateNum <= 0) {
+                          toast({ title: "Annual rate must be greater than 0", variant: "destructive" });
+                          return;
+                        }
+                        await handleAction("add_rate", { rate: rateNum, effective_date: newRateDate }, "Rate updated");
                         setRateDialogOpen(false); setNewRate("30"); setNewRateDate(new Date().toISOString().split("T")[0]);
                       }}>Save Rate</Button>
                     </div>
@@ -420,15 +428,37 @@ const AdminPanel = () => {
               <CardContent>
                 {rates.length === 0 ? <p className="text-muted-foreground text-sm">No rates configured.</p> : (
                   <Table>
-                    <TableHeader><TableRow><TableHead>Annual Rate</TableHead><TableHead>Effective Date</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Annual Rate</TableHead><TableHead>Effective Date (WIB)</TableHead><TableHead>Created (WIB)</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
                     <TableBody>
-                      {rates.map((r, i) => (
-                        <TableRow key={r.id}>
-                          <TableCell className="font-bold text-lg">{r.rate}%</TableCell>
-                          <TableCell>{r.effective_date}</TableCell>
-                          <TableCell>{i === 0 ? <Badge className="bg-primary/20 text-primary">Current</Badge> : <Badge variant="outline">Previous</Badge>}</TableCell>
-                        </TableRow>
-                      ))}
+                      {(() => {
+                        const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
+                        // Find the currently-effective rate: latest effective_date <= today,
+                        // tie-break by created_at desc (already the order from API).
+                        const currentIdx = rates.findIndex(r => r.effective_date <= todayStr);
+                        return rates.map((r, i) => {
+                          const created = new Date(r.created_at).toLocaleString("id-ID", {
+                            timeZone: "Asia/Jakarta",
+                            dateStyle: "short",
+                            timeStyle: "medium",
+                          });
+                          const isCurrent = i === currentIdx;
+                          const isFuture = r.effective_date > todayStr;
+                          return (
+                            <TableRow key={r.id}>
+                              <TableCell className="font-bold text-lg">{r.rate}%</TableCell>
+                              <TableCell>{r.effective_date}</TableCell>
+                              <TableCell className="text-muted-foreground text-sm">{created} WIB</TableCell>
+                              <TableCell>
+                                {isCurrent
+                                  ? <Badge className="bg-primary/20 text-primary">Current</Badge>
+                                  : isFuture
+                                    ? <Badge variant="secondary">Upcoming</Badge>
+                                    : <Badge variant="outline">Previous</Badge>}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        });
+                      })()}
                     </TableBody>
                   </Table>
                 )}
