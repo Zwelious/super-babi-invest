@@ -377,7 +377,7 @@ const Dashboard = () => {
                   )}
                 </div>
 
-                <Button className="w-full" onClick={handleDeposit} disabled={loading || !depositFile}>
+                <Button className="w-full" onClick={handleDeposit} disabled={loading}>
                   {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   {t("Submit Deposit", "Kirim Setoran")}
                 </Button>
