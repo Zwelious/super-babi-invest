@@ -384,11 +384,24 @@ const AdminPanel = () => {
                         <p className="text-xs text-muted-foreground">Auto-filled from the investment + type. You can override if needed.</p>
                       </div>
                       <div className="space-y-2"><Label>Date</Label><Input type="date" value={disbDate} onChange={(e) => setDisbDate(e.target.value)} /></div>
-                      <Button className="w-full" onClick={async () => {
-                        await handleAction("add_disbursement", { user_id: disbMemberId, investment_id: disbInvestmentId, amount: Number(disbAmount), type: disbType, disbursement_date: disbDate }, "Disbursement recorded");
-                        setDisbursementDialogOpen(false);
-                        setDisbType(""); setDisbAmount(""); setDisbDate(""); setDisbMemberId(""); setDisbInvestmentId("");
-                      }}>Record</Button>
+                      <Button
+                        className="w-full"
+                        disabled={!disbMemberId || !disbInvestmentId || !disbType || !disbDate || !disbAmount || Number(disbAmount) <= 0}
+                        onClick={async () => {
+                          if (!disbMemberId || !disbInvestmentId || !disbType || !disbDate) {
+                            toast({ title: "Please fill in all fields", variant: "destructive" });
+                            return;
+                          }
+                          const amt = Number(disbAmount);
+                          if (!Number.isFinite(amt) || amt <= 0) {
+                            toast({ title: "Amount must be greater than 0", variant: "destructive" });
+                            return;
+                          }
+                          await handleAction("add_disbursement", { user_id: disbMemberId, investment_id: disbInvestmentId, amount: amt, type: disbType, disbursement_date: disbDate }, "Disbursement recorded");
+                          setDisbursementDialogOpen(false);
+                          setDisbType(""); setDisbAmount(""); setDisbDate(""); setDisbMemberId(""); setDisbInvestmentId("");
+                        }}
+                      >Record</Button>
                     </div>
                   </DialogContent>
                 </Dialog>
