@@ -539,7 +539,7 @@ const AdminPanel = () => {
                 <p className="text-sm text-muted-foreground mb-4">Use this to notify members when a swine dies, affecting their deposit value and total investment returns.</p>
                 {notifications.length === 0 ? <p className="text-muted-foreground text-sm">No notifications sent yet.</p> : (
                   <Table>
-                    <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Member</TableHead><TableHead>Title</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Member</TableHead><TableHead>Title</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {notifications.map((n) => (
                         <TableRow key={n.id}>
@@ -547,6 +547,9 @@ const AdminPanel = () => {
                           <TableCell>{n.member_name}</TableCell>
                           <TableCell>{n.title}</TableCell>
                           <TableCell>{n.read ? <Badge variant="secondary">Read</Badge> : <Badge variant="destructive">Unread</Badge>}</TableCell>
+                          <TableCell>
+                            <Button size="sm" variant="outline" onClick={() => setViewNotification(n)}>View</Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -556,6 +559,29 @@ const AdminPanel = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <Dialog open={!!viewNotification} onOpenChange={(open) => { if (!open) setViewNotification(null); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="font-display">{viewNotification?.title}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>To: <strong className="text-foreground">{viewNotification?.member_name}</strong></span>
+                <span>{viewNotification && new Date(viewNotification.created_at).toLocaleString("id-ID", { timeZone: "Asia/Jakarta", dateStyle: "short", timeStyle: "short" })} WIB</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant={viewNotification?.type === "swine_death" ? "destructive" : "secondary"}>
+                  {viewNotification?.type === "swine_death" ? "Swine Loss" : "General"}
+                </Badge>
+                {viewNotification?.read ? <Badge variant="secondary">Read</Badge> : <Badge variant="destructive">Unread</Badge>}
+              </div>
+              <div className="rounded-md border bg-muted/30 p-4 text-sm leading-relaxed whitespace-pre-wrap">
+                {viewNotification?.message}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
