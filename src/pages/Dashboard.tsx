@@ -351,7 +351,40 @@ const Dashboard = () => {
                     </div>
                   </CardContent>
                 </Card>
-                <Button className="w-full" onClick={handleDeposit} disabled={loading}>
+
+                <div className="space-y-2">
+                  <Label>{t("Transfer Receipt", "Bukti Transfer")} <span className="text-destructive">*</span></Label>
+                  <Input
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] || null;
+                      if (f) {
+                        const err = validateReceiptFile(f);
+                        if (err) {
+                          toast({ title: err, variant: "destructive" });
+                          e.target.value = "";
+                          setDepositFile(null);
+                          return;
+                        }
+                      }
+                      setDepositFile(f);
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      "Accepted formats: JPG, PNG, WEBP, GIF. Max size: 5 MB.",
+                      "Format yang diterima: JPG, PNG, WEBP, GIF. Ukuran maks: 5 MB."
+                    )}
+                  </p>
+                  {depositFile && (
+                    <p className="text-xs text-primary">
+                      {depositFile.name} ({(depositFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </p>
+                  )}
+                </div>
+
+                <Button className="w-full" onClick={handleDeposit} disabled={loading || !depositFile}>
                   {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   {t("Submit Deposit", "Kirim Setoran")}
                 </Button>
@@ -359,6 +392,7 @@ const Dashboard = () => {
             </DialogContent>
           </Dialog>
 
+          {deposits.filter(d => d.status === "pending" && !d.receipt_url).length > 0 && (
           <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
             <DialogTrigger asChild>
               <Button size="lg" variant="outline"><Upload className="h-4 w-4 mr-1" />{t("Upload Receipt", "Unggah Bukti Transfer")}</Button>
@@ -368,33 +402,50 @@ const Dashboard = () => {
                 <DialogTitle className="font-display">{t("Upload Transfer Receipt", "Unggah Bukti Transfer")}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-2">
-                {deposits.filter(d => d.status === "pending").length > 0 ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label>{t("Select Deposit", "Pilih Setoran")}</Label>
-                      <select
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        value={selectedDepositId || ""}
-                        onChange={(e) => setSelectedDepositId(e.target.value)}
-                      >
-                        <option value="">{t("Select...", "Pilih...")}</option>
-                        {deposits.filter(d => d.status === "pending").map(d => (
-                          <option key={d.id} value={d.id}>{d.deposit_date} - {formatRp(Number(d.amount))}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <Input type="file" accept="image/*,.pdf" onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} />
-                    <Button className="w-full" onClick={handleUploadReceipt} disabled={loading || !selectedFile || !selectedDepositId}>
-                      {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                      {t("Upload", "Unggah")}
-                    </Button>
-                  </>
-                ) : (
-                  <p className="text-muted-foreground text-sm">{t("No pending deposits to upload receipt for.", "Tidak ada setoran menunggu untuk diunggah buktinya.")}</p>
-                )}
+                <div className="space-y-2">
+                  <Label>{t("Select Deposit", "Pilih Setoran")}</Label>
+                  <select
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={selectedDepositId || ""}
+                    onChange={(e) => setSelectedDepositId(e.target.value)}
+                  >
+                    <option value="">{t("Select...", "Pilih...")}</option>
+                    {deposits.filter(d => d.status === "pending" && !d.receipt_url).map(d => (
+                      <option key={d.id} value={d.id}>{d.deposit_date} - {formatRp(Number(d.amount))}</option>
+                    ))}
+                  </select>
+                </div>
+                <Input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] || null;
+                    if (f) {
+                      const err = validateReceiptFile(f);
+                      if (err) {
+                        toast({ title: err, variant: "destructive" });
+                        e.target.value = "";
+                        setSelectedFile(null);
+                        return;
+                      }
+                    }
+                    setSelectedFile(f);
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t(
+                    "Accepted formats: JPG, PNG, WEBP, GIF. Max size: 5 MB.",
+                    "Format yang diterima: JPG, PNG, WEBP, GIF. Ukuran maks: 5 MB."
+                  )}
+                </p>
+                <Button className="w-full" onClick={handleUploadReceipt} disabled={loading || !selectedFile || !selectedDepositId}>
+                  {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  {t("Upload", "Unggah")}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
+          )}
         </div>
       </main>
     </div>
