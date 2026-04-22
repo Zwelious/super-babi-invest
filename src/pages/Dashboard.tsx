@@ -385,60 +385,6 @@ const Dashboard = () => {
             </DialogContent>
           </Dialog>
 
-          {deposits.filter(d => d.status === "pending" && !d.receipt_url).length > 0 && (
-          <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
-            <DialogTrigger asChild>
-              <Button size="lg" variant="outline"><Upload className="h-4 w-4 mr-1" />{t("Upload Receipt", "Unggah Bukti Transfer")}</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="font-display">{t("Upload Transfer Receipt", "Unggah Bukti Transfer")}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-2">
-                <div className="space-y-2">
-                  <Label>{t("Select Deposit", "Pilih Setoran")}</Label>
-                  <select
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={selectedDepositId || ""}
-                    onChange={(e) => setSelectedDepositId(e.target.value)}
-                  >
-                    <option value="">{t("Select...", "Pilih...")}</option>
-                    {deposits.filter(d => d.status === "pending" && !d.receipt_url).map(d => (
-                      <option key={d.id} value={d.id}>{d.deposit_date} - {formatRp(Number(d.amount))}</option>
-                    ))}
-                  </select>
-                </div>
-                <Input
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0] || null;
-                    if (f) {
-                      const err = validateReceiptFile(f);
-                      if (err) {
-                        toast({ title: err, variant: "destructive" });
-                        e.target.value = "";
-                        setSelectedFile(null);
-                        return;
-                      }
-                    }
-                    setSelectedFile(f);
-                  }}
-                />
-                <p className="text-xs text-muted-foreground">
-                  {t(
-                    "Accepted formats: JPG, PNG, WEBP, GIF. Max size: 5 MB.",
-                    "Format yang diterima: JPG, PNG, WEBP, GIF. Ukuran maks: 5 MB."
-                  )}
-                </p>
-                <Button className="w-full" onClick={handleUploadReceipt} disabled={loading || !selectedFile || !selectedDepositId}>
-                  {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  {t("Upload", "Unggah")}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-          )}
         </div>
       </main>
     </div>
