@@ -46,7 +46,7 @@ const AdminPanel = () => {
   const [disbursementDialogOpen, setDisbursementDialogOpen] = useState(false);
   const [rateDialogOpen, setRateDialogOpen] = useState(false);
   const [notifyDialogOpen, setNotifyDialogOpen] = useState(false);
-  const [newRate, setNewRate] = useState("30");
+  const [newRate, setNewRate] = useState("0");
   const [newRateDate, setNewRateDate] = useState(new Date().toISOString().split("T")[0]);
   const [notifyTitle, setNotifyTitle] = useState("");
   const [notifyMessage, setNotifyMessage] = useState("");
@@ -476,7 +476,7 @@ const AdminPanel = () => {
                     <div className="space-y-4 pt-2">
                       <div className="space-y-2">
                         <Label>Annual Rate (%)</Label>
-                        <Input type="number" min={0.01} step="0.01" value={newRate} onChange={(e) => setNewRate(e.target.value)} placeholder="30" />
+                        <Input type="number" min={0.01} step="0.01" value={newRate} onChange={(e) => setNewRate(e.target.value)} placeholder="0" />
                         <p className="text-xs text-muted-foreground">Must be greater than 0.</p>
                       </div>
                       <div className="space-y-2"><Label>Effective Date</Label><Input type="date" value={newRateDate} onChange={(e) => setNewRateDate(e.target.value)} /></div>
@@ -487,7 +487,7 @@ const AdminPanel = () => {
                           return;
                         }
                         await handleAction("add_rate", { rate: rateNum, effective_date: newRateDate }, "Rate updated");
-                        setRateDialogOpen(false); setNewRate("30"); setNewRateDate(new Date().toISOString().split("T")[0]);
+                        setRateDialogOpen(false); setNewRate("0"); setNewRateDate(new Date().toISOString().split("T")[0]);
                       }}>Save Rate</Button>
                     </div>
                   </DialogContent>
