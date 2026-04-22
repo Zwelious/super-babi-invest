@@ -167,7 +167,11 @@ Deno.serve(async (req) => {
       }
 
       case "get_rates": {
-        const { data, error } = await supabase.from("master_rates").select("*").order("effective_date", { ascending: false });
+        const { data, error } = await supabase
+          .from("master_rates")
+          .select("*")
+          .order("effective_date", { ascending: false })
+          .order("created_at", { ascending: false });
         if (error) throw error;
         return new Response(JSON.stringify(data), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
