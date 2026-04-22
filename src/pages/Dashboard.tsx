@@ -294,6 +294,7 @@ const Dashboard = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>{t("Deposit ID", "ID Setoran")}</TableHead>
                     <TableHead>{t("Date", "Tanggal")}</TableHead>
                     <TableHead>{t("Units", "Unit")}</TableHead>
                     <TableHead>{t("Amount", "Jumlah")}</TableHead>
@@ -303,6 +304,7 @@ const Dashboard = () => {
                 <TableBody>
                   {deposits.map((d) => (
                     <TableRow key={d.id}>
+                      <TableCell className="font-mono text-xs">{d.id.slice(0, 8).toUpperCase()}</TableCell>
                       <TableCell>{d.deposit_date}</TableCell>
                       <TableCell>{d.units}</TableCell>
                       <TableCell>{formatRp(Number(d.amount))}</TableCell>
