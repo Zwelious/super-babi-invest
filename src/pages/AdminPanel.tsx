@@ -486,8 +486,22 @@ const AdminPanel = () => {
                       {(() => {
                         const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
                         // Find the currently-effective rate: latest effective_date <= today,
-                        // tie-break by created_at desc (already the order from API).
-                        const currentIdx = rates.findIndex(r => r.effective_date <= todayStr);
+                        // tie-break by latest created_at when multiple rates share the same effective_date.
+                        let currentIdx = -1;
+                        let bestEffective = "";
+                        let bestCreated = "";
+                        rates.forEach((r, i) => {
+                          if (r.effective_date <= todayStr) {
+                            if (
+                              r.effective_date > bestEffective ||
+                              (r.effective_date === bestEffective && r.created_at > bestCreated)
+                            ) {
+                              bestEffective = r.effective_date;
+                              bestCreated = r.created_at;
+                              currentIdx = i;
+                            }
+                          }
+                        });
                         return rates.map((r, i) => {
                           const created = new Date(r.created_at).toLocaleString("id-ID", {
                             timeZone: "Asia/Jakarta",
