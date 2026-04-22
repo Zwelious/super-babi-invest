@@ -95,12 +95,17 @@ const Dashboard = () => {
 
   const handleDeposit = async () => {
     if (!userId) return;
-    if (depositFile) {
-      const fileError = validateReceiptFile(depositFile);
-      if (fileError) {
-        toast({ title: fileError, variant: "destructive" });
-        return;
-      }
+    if (!depositFile) {
+      toast({
+        title: t("Transfer receipt is required", "Bukti transfer wajib diunggah"),
+        variant: "destructive",
+      });
+      return;
+    }
+    const fileError = validateReceiptFile(depositFile);
+    if (fileError) {
+      toast({ title: fileError, variant: "destructive" });
+      return;
     }
     setLoading(true);
     try {
@@ -352,7 +357,7 @@ const Dashboard = () => {
                 </Card>
 
                 <div className="space-y-2">
-                  <Label>{t("Transfer Receipt", "Bukti Transfer")} <span className="text-muted-foreground text-xs font-normal">({t("optional", "opsional")})</span></Label>
+                  <Label>{t("Transfer Receipt", "Bukti Transfer")} <span className="text-destructive">*</span></Label>
                   <Input
                     type="file"
                     accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
@@ -383,7 +388,7 @@ const Dashboard = () => {
                   )}
                 </div>
 
-                <Button className="w-full" onClick={handleDeposit} disabled={loading}>
+                <Button className="w-full" onClick={handleDeposit} disabled={loading || !depositFile}>
                   {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   {t("Submit Deposit", "Kirim Setoran")}
                 </Button>
