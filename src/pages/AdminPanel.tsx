@@ -430,7 +430,7 @@ const AdminPanel = () => {
                 {disbursements.length === 0 ? <p className="text-muted-foreground text-sm">No disbursements yet.</p> : (
                   <Table>
                     <TableHeader>
-                      <TableRow><TableHead>Member</TableHead><TableHead>Type</TableHead><TableHead>Amount</TableHead><TableHead>Date</TableHead><TableHead>Status</TableHead></TableRow>
+                      <TableRow><TableHead>Member</TableHead><TableHead>Type</TableHead><TableHead>Amount</TableHead><TableHead>Date</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Action</TableHead></TableRow>
                     </TableHeader>
                     <TableBody>
                       {disbursements.map((d) => (
@@ -439,7 +439,22 @@ const AdminPanel = () => {
                           <TableCell>{d.type}</TableCell>
                           <TableCell>{formatRp(Number(d.amount))}</TableCell>
                           <TableCell>{d.disbursement_date}</TableCell>
-                          <TableCell><Badge variant={d.status === "completed" ? "default" : "outline"}>{d.status}</Badge></TableCell>
+                          <TableCell><Badge variant={d.status === "completed" ? "default" : "outline"}>{d.status === "completed" ? "done" : d.status}</Badge></TableCell>
+                          <TableCell className="text-right">
+                            {d.status !== "completed" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  if (window.confirm(`Mark disbursement of ${formatRp(Number(d.amount))} for ${d.member_name} as Done?`)) {
+                                    handleAction("complete_disbursement", { id: d.id }, "Disbursement marked as done");
+                                  }
+                                }}
+                              >
+                                <Check className="h-4 w-4 mr-1" /> Mark Done
+                              </Button>
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

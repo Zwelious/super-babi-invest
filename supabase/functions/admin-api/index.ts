@@ -217,6 +217,12 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
+      case "complete_disbursement": {
+        const { error } = await supabase.from("disbursements").update({ status: "completed" }).eq("id", params.id);
+        if (error) throw error;
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
       case "send_notification": {
         const { error } = await supabase.from("notifications").insert({
           user_id: params.user_id,
