@@ -25,19 +25,32 @@ Deno.serve(async (req) => {
     // Allow authenticated users (non-admin) to attach a receipt to their own deposit
     if (!isAdmin) {
       if (action !== "update_deposit_receipt") {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        console.log("Non-admin tried action:", action);
+        return new Response(JSON.stringify({ error: "Unauthorized: action not allowed" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      const userJwt = req.headers.get("authorization")?.replace("Bearer ", "");
+      const authHeaderRaw = req.headers.get("authorization") || "";
+      const userJwt = authHeaderRaw.replace("Bearer ", "");
       if (!userJwt) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        console.log("Missing authorization header");
+        return new Response(JSON.stringify({ error: "Unauthorized: missing auth header" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       const { data: userData, error: userErr } = await supabase.auth.getUser(userJwt);
       if (userErr || !userData.user) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        console.log("getUser failed:", userErr?.message);
+        return new Response(JSON.stringify({ error: `Unauthorized: ${userErr?.message || "invalid jwt"}` }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (!params.id) {
+        console.log("Missing deposit id in params");
+        return new Response(JSON.stringify({ error: "Missing deposit id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       const { data: dep, error: depErr } = await supabase.from("deposits").select("user_id").eq("id", params.id).single();
-      if (depErr || !dep || dep.user_id !== userData.user.id) {
-        return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (depErr) {
+        console.log("Deposit lookup failed:", depErr.message, "id:", params.id);
+        return new Response(JSON.stringify({ error: `Deposit lookup failed: ${depErr.message}` }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (!dep || dep.user_id !== userData.user.id) {
+        console.log("Forbidden: dep.user_id=", dep?.user_id, "auth uid=", userData.user.id);
+        return new Response(JSON.stringify({ error: "Forbidden: deposit does not belong to user" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }
 
