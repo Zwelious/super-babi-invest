@@ -122,10 +122,14 @@ const Dashboard = () => {
         if (uploadError) throw uploadError;
 
         // 3. Persist receipt path via admin edge function
-        const { error: updateError } = await supabase.functions.invoke("admin-api", {
+        const { data: updateData, error: updateError } = await supabase.functions.invoke("admin-api", {
           body: { action: "update_deposit_receipt", id: deposit.id, receipt_url: filePath },
         });
-        if (updateError) throw updateError;
+        if (updateError) {
+          const detail = (updateData as any)?.error || updateError.message;
+          throw new Error(detail);
+        }
+        if (updateData && (updateData as any).error) throw new Error((updateData as any).error);
       }
 
       toast({ title: t("Deposit submitted", "Setoran terkirim") });
