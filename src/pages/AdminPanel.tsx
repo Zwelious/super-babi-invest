@@ -233,12 +233,13 @@ const AdminPanel = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Member</TableHead><TableHead>Amount</TableHead><TableHead>Date</TableHead><TableHead>Receipt</TableHead><TableHead>Actions</TableHead>
+                          <TableHead>Deposit ID</TableHead><TableHead>Member</TableHead><TableHead>Amount</TableHead><TableHead>Date</TableHead><TableHead>Receipt</TableHead><TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {pendingDeposits.map((d) => (
                           <TableRow key={d.id}>
+                            <TableCell className="font-mono text-xs">{d.id.slice(0, 8).toUpperCase()}</TableCell>
                             <TableCell className="font-medium">{d.member_name}</TableCell>
                             <TableCell>{formatRp(Number(d.amount))}</TableCell>
                             <TableCell>{d.deposit_date}</TableCell>
@@ -286,12 +287,13 @@ const AdminPanel = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Member</TableHead><TableHead>Amount</TableHead><TableHead>Deposit Date</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead>
+                        <TableHead>Deposit ID</TableHead><TableHead>Member</TableHead><TableHead>Amount</TableHead><TableHead>Deposit Date</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {approvedDeposits.map((d) => (
                         <TableRow key={d.id}>
+                          <TableCell className="font-mono text-xs">{d.id.slice(0, 8).toUpperCase()}</TableCell>
                           <TableCell className="font-medium">{d.member_name}</TableCell>
                           <TableCell>{formatRp(Number(d.amount))}</TableCell>
                           <TableCell>{d.deposit_date}</TableCell>
