@@ -68,7 +68,7 @@ const Register = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-between mb-8">
-          <Link to="/" className="flex items-center gap-2 text-foreground">
+          <Link to="/superbabi" className="flex items-center gap-2 text-foreground">
             <ArrowLeft className="h-4 w-4" />
             <PiggyBank className="h-6 w-6 text-primary" />
             <span className="font-display text-lg font-bold">Super Babi</span>
@@ -117,7 +117,7 @@ const Register = () => {
               </Button>
               <p className="text-center text-sm text-muted-foreground">
                 {t("Already a member?", "Sudah menjadi anggota?")}{" "}
-                <Link to="/login" className="text-primary hover:underline">{t("Login here", "Masuk di sini")}</Link>
+                <Link to="/superbabi/login" className="text-primary hover:underline">{t("Login here", "Masuk di sini")}</Link>
               </p>
             </form>
           </CardContent>

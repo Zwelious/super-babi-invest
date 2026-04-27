@@ -146,14 +146,14 @@ const AdminPanel = () => {
     <div className="min-h-screen bg-background">
       <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container flex items-center justify-between h-14">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/superbabi" className="flex items-center gap-2">
             <PiggyBank className="h-6 w-6 text-primary" />
             <span className="font-display text-lg font-bold">Super Babi Admin</span>
           </Link>
           <div className="flex items-center gap-2">
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
             <Button variant="ghost" size="sm" onClick={loadData}>Refresh</Button>
-            <Button variant="ghost" size="sm" asChild><Link to="/">Exit Admin</Link></Button>
+            <Button variant="ghost" size="sm" asChild><Link to="/superbabi">Exit Admin</Link></Button>
           </div>
         </div>
       </nav>
