@@ -96,7 +96,7 @@ const Index = () => {
             transition={{ delay: 0.5, duration: 0.6 }}
           >
             <Button size="lg" variant="hero" asChild>
-              <Link to="/register">{t("Start Investing", "Mulai Investasi")}</Link>
+              <Link to="/superbabi/register">{t("Start Investing", "Mulai Investasi")}</Link>
             </Button>
             <Button size="lg" variant="hero-outline" asChild>
               <Link to="#about">{t("Learn More", "Pelajari Lebih")}</Link>
