@@ -160,7 +160,7 @@ const Indopok = () => {
             >
               Rumah Ternak Indopok is a state-of-the-art livestock facility in Getasan,
               Central Java — combining smart farming technology, sustainable operations,
-              and transparent investment opportunities for the next generation of agritech.
+              and transparent project opportunities for the next generation of agritech.
             </motion.p>
 
             <motion.div
@@ -175,7 +175,7 @@ const Indopok = () => {
                 className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg"
               >
                 <Link to="/superbabi">
-                  Invest Now <ArrowRight className="h-4 w-4 ml-1" />
+                  Join the Project <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </Button>
               <Button
