@@ -206,7 +206,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container flex items-center justify-between h-14">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/superbabi" className="flex items-center gap-2">
             <PiggyBank className="h-6 w-6 text-primary" />
             <span className="font-display text-lg font-bold">Super Babi</span>
           </Link>
