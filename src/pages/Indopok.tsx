@@ -50,7 +50,7 @@ const Indopok = () => {
     {
       icon: LineChart,
       title: "High Yield Potential",
-      desc: "Carefully structured investment cycles with transparent, performance-based returns from a high-capacity facility.",
+      desc: "Carefully structured project cycles with transparent, performance-based returns from a high-capacity facility.",
     },
     {
       icon: Cpu,
