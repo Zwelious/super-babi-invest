@@ -375,12 +375,12 @@ const Indopok = () => {
             Ready to grow with Indonesian agritech?
           </h2>
           <p className="text-primary-foreground/80 mb-8 max-w-xl mx-auto">
-            Join our investor community and be part of a sustainable, technology-driven
+            Join our partner community and be part of a sustainable, technology-driven
             farming revolution.
           </p>
           <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg">
             <Link to="/superbabi">
-              Go to Super Babi Investment <ArrowRight className="h-4 w-4 ml-1" />
+              Go to Project Dashboard <ArrowRight className="h-4 w-4 ml-1" />
             </Link>
           </Button>
         </div>
