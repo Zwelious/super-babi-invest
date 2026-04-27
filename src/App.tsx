@@ -22,7 +22,13 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Indopok />} />
+            <Route path="/superbabi" element={<Index />} />
+            <Route path="/superbabi/register" element={<Register />} />
+            <Route path="/superbabi/login" element={<Login />} />
+            <Route path="/superbabi/member" element={<Dashboard />} />
+            <Route path="/superbabi/admin" element={<AdminPanel />} />
+            {/* Backward-compat redirects via routing */}
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
