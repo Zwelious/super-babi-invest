@@ -86,16 +86,11 @@ const Indopok = () => {
         }`}
       >
         <div className="container flex items-center justify-between h-16">
-          <Link to="/" className="group relative flex items-center">
-            <img
-              src={logoWhite}
-              alt="Rumah Ternak Indopok"
-              className="h-12 md:h-14 w-auto object-contain transition-opacity duration-300 group-hover:opacity-0"
-            />
+          <Link to="/" className="flex items-center">
             <img
               src={logoTransparent}
               alt="Rumah Ternak Indopok"
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-12 md:h-14 w-auto object-contain opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              className="h-12 md:h-14 w-auto object-contain"
             />
           </Link>
 
