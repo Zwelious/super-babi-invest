@@ -292,19 +292,19 @@ const Indopok = () => {
         </div>
       </section>
 
-      {/* FEATURES / SUPER BABI */}
+      {/* FEATURES / OUR PROJECT */}
       <section id="features" className="py-24 md:py-32 bg-secondary/40 border-y">
         <div className="container">
           <div className="max-w-2xl mx-auto text-center mb-16">
             <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-3">
-              Super Babi Investment
+              Our Project
             </p>
             <h2 className="font-display text-3xl md:text-5xl font-bold mb-5 leading-tight">
-              Invest in the Future of Smart Farming.
+              Be Part of the Future of Smart Farming.
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Super Babi is the investment platform powered by Rumah Ternak Indopok —
-              built on transparency, modern technology, and a sustainable business model.
+              Our project is powered by Rumah Ternak Indopok — built on transparency,
+              modern technology, and a sustainable business model.
             </p>
           </div>
 
@@ -331,7 +331,7 @@ const Indopok = () => {
           <div className="text-center mt-14">
             <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-md">
               <Link to="/superbabi">
-                Explore Super Babi Investment <ArrowRight className="h-4 w-4 ml-1" />
+                Explore the Project <ArrowRight className="h-4 w-4 ml-1" />
               </Link>
             </Button>
           </div>
