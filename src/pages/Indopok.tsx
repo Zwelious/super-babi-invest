@@ -60,7 +60,7 @@ const Indopok = () => {
     {
       icon: ShieldCheck,
       title: "Transparent Monitoring",
-      desc: "Investors gain real-time visibility into operations, herd performance, and financial reporting.",
+      desc: "Partners gain real-time visibility into operations, herd performance, and financial reporting.",
     },
     {
       icon: Recycle,
