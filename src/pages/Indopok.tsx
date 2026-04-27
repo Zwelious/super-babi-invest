@@ -19,6 +19,8 @@ import {
   Recycle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logoWhite from "@/assets/indopok-logo-white.png";
+import logoTransparent from "@/assets/indopok-logo-transparent.png";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -84,29 +86,34 @@ const Indopok = () => {
         }`}
       >
         <div className="container flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center">
-              <Sprout className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div className="leading-tight">
-              <p className="font-display text-base font-bold">Indopok</p>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Rumah Ternak
-              </p>
-            </div>
+          <Link to="/" className="group relative flex items-center">
+            <img
+              src={logoWhite}
+              alt="Rumah Ternak Indopok"
+              className="h-12 md:h-14 w-auto object-contain transition-opacity duration-300 group-hover:opacity-0"
+            />
+            <img
+              src={logoTransparent}
+              alt="Rumah Ternak Indopok"
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-12 md:h-14 w-auto object-contain opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            />
           </Link>
 
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-            <a href="#about" onClick={(e) => handleAnchor(e, "about")} className="hover:text-primary transition-colors">
+          <div
+            className={`hidden md:flex items-center gap-8 text-sm font-medium transition-colors ${
+              scrolled ? "text-foreground" : "text-primary-foreground"
+            }`}
+          >
+            <a href="#about" onClick={(e) => handleAnchor(e, "about")} className="hover:text-accent transition-colors">
               About
             </a>
-            <a href="#features" onClick={(e) => handleAnchor(e, "features")} className="hover:text-primary transition-colors">
+            <a href="#features" onClick={(e) => handleAnchor(e, "features")} className="hover:text-accent transition-colors">
               Investment
             </a>
-            <a href="#location" onClick={(e) => handleAnchor(e, "location")} className="hover:text-primary transition-colors">
+            <a href="#location" onClick={(e) => handleAnchor(e, "location")} className="hover:text-accent transition-colors">
               Location
             </a>
-            <a href="#contact" onClick={(e) => handleAnchor(e, "contact")} className="hover:text-primary transition-colors">
+            <a href="#contact" onClick={(e) => handleAnchor(e, "contact")} className="hover:text-accent transition-colors">
               Contact
             </a>
           </div>
