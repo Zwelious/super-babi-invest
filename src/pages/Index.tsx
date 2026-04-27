@@ -49,17 +49,17 @@ const Index = () => {
       {/* Nav */}
       <nav className="fixed top-0 inset-x-0 z-50 bg-background/80 backdrop-blur-md border-b">
         <div className="container flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/superbabi" className="flex items-center gap-2">
             <PiggyBank className="h-7 w-7 text-primary" />
             <span className="font-display text-xl font-bold text-foreground">Super Babi</span>
           </Link>
           <div className="flex items-center gap-2">
             <LanguageToggle />
             <Button variant="ghost" asChild>
-              <Link to="/login">{t("Login", "Masuk")}</Link>
+              <Link to="/superbabi/login">{t("Login", "Masuk")}</Link>
             </Button>
             <Button asChild>
-              <Link to="/register">{t("Join Now", "Daftar")}</Link>
+              <Link to="/superbabi/register">{t("Join Now", "Daftar")}</Link>
             </Button>
           </div>
         </div>
