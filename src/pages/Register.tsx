@@ -117,7 +117,7 @@ const Register = () => {
               </Button>
               <p className="text-center text-sm text-muted-foreground">
                 {t("Already a member?", "Sudah menjadi anggota?")}{" "}
-                <Link to="/login" className="text-primary hover:underline">{t("Login here", "Masuk di sini")}</Link>
+                <Link to="/superbabi/login" className="text-primary hover:underline">{t("Login here", "Masuk di sini")}</Link>
               </p>
             </form>
           </CardContent>
