@@ -50,7 +50,7 @@ const Indopok = () => {
     {
       icon: LineChart,
       title: "High Yield Potential",
-      desc: "Carefully structured investment cycles with transparent, performance-based returns from a high-capacity facility.",
+      desc: "Carefully structured project cycles with transparent, performance-based returns from a high-capacity facility.",
     },
     {
       icon: Cpu,
@@ -60,7 +60,7 @@ const Indopok = () => {
     {
       icon: ShieldCheck,
       title: "Transparent Monitoring",
-      desc: "Investors gain real-time visibility into operations, herd performance, and financial reporting.",
+      desc: "Partners gain real-time visibility into operations, herd performance, and financial reporting.",
     },
     {
       icon: Recycle,
@@ -103,7 +103,7 @@ const Indopok = () => {
               About
             </a>
             <a href="#features" onClick={(e) => handleAnchor(e, "features")} className="hover:text-accent transition-colors">
-              Investment
+              Project
             </a>
             <a href="#location" onClick={(e) => handleAnchor(e, "location")} className="hover:text-accent transition-colors">
               Location
@@ -115,7 +115,7 @@ const Indopok = () => {
 
           <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-md">
             <Link to="/superbabi">
-              Super Babi Investment
+              Project Dashboard
               <ArrowRight className="h-4 w-4 ml-1" />
             </Link>
           </Button>
@@ -160,7 +160,7 @@ const Indopok = () => {
             >
               Rumah Ternak Indopok is a state-of-the-art livestock facility in Getasan,
               Central Java — combining smart farming technology, sustainable operations,
-              and transparent investment opportunities for the next generation of agritech.
+              and transparent project opportunities for the next generation of agritech.
             </motion.p>
 
             <motion.div
@@ -175,7 +175,7 @@ const Indopok = () => {
                 className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg"
               >
                 <Link to="/superbabi">
-                  Invest Now <ArrowRight className="h-4 w-4 ml-1" />
+                  Join the Project <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </Button>
               <Button
@@ -292,19 +292,19 @@ const Indopok = () => {
         </div>
       </section>
 
-      {/* FEATURES / SUPER BABI */}
+      {/* FEATURES / OUR PROJECT */}
       <section id="features" className="py-24 md:py-32 bg-secondary/40 border-y">
         <div className="container">
           <div className="max-w-2xl mx-auto text-center mb-16">
             <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-3">
-              Super Babi Investment
+              Our Project
             </p>
             <h2 className="font-display text-3xl md:text-5xl font-bold mb-5 leading-tight">
-              Invest in the Future of Smart Farming.
+              Be Part of the Future of Smart Farming.
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Super Babi is the investment platform powered by Rumah Ternak Indopok —
-              built on transparency, modern technology, and a sustainable business model.
+              Our project is powered by Rumah Ternak Indopok — built on transparency,
+              modern technology, and a sustainable business model.
             </p>
           </div>
 
@@ -331,7 +331,7 @@ const Indopok = () => {
           <div className="text-center mt-14">
             <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-md">
               <Link to="/superbabi">
-                Explore Super Babi Investment <ArrowRight className="h-4 w-4 ml-1" />
+                Explore the Project <ArrowRight className="h-4 w-4 ml-1" />
               </Link>
             </Button>
           </div>
@@ -375,12 +375,12 @@ const Indopok = () => {
             Ready to grow with Indonesian agritech?
           </h2>
           <p className="text-primary-foreground/80 mb-8 max-w-xl mx-auto">
-            Join our investor community and be part of a sustainable, technology-driven
+            Join our partner community and be part of a sustainable, technology-driven
             farming revolution.
           </p>
           <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg">
             <Link to="/superbabi">
-              Go to Super Babi Investment <ArrowRight className="h-4 w-4 ml-1" />
+              Go to Project Dashboard <ArrowRight className="h-4 w-4 ml-1" />
             </Link>
           </Button>
         </div>
@@ -419,9 +419,9 @@ const Indopok = () => {
             </p>
             <ul className="space-y-2 text-sm text-sidebar-foreground/80">
               <li><a href="#about" onClick={(e) => handleAnchor(e, "about")} className="hover:text-accent transition-colors">About</a></li>
-              <li><a href="#features" onClick={(e) => handleAnchor(e, "features")} className="hover:text-accent transition-colors">Investment</a></li>
+              <li><a href="#features" onClick={(e) => handleAnchor(e, "features")} className="hover:text-accent transition-colors">Project</a></li>
               <li><a href="#location" onClick={(e) => handleAnchor(e, "location")} className="hover:text-accent transition-colors">Location</a></li>
-              <li><Link to="/superbabi" className="hover:text-accent transition-colors">Super Babi</Link></li>
+              <li><Link to="/superbabi" className="hover:text-accent transition-colors">Project Dashboard</Link></li>
             </ul>
           </div>
 
