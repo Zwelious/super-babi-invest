@@ -37,7 +37,7 @@ const Login = () => {
         toast({ title: t("Account rejected", "Akun ditolak"), variant: "destructive" });
         return;
       }
-      navigate("/dashboard");
+      navigate("/superbabi/member");
     } catch (err: any) {
       toast({ title: err.message || "Login failed", variant: "destructive" });
     } finally {
