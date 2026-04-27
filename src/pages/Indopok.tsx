@@ -103,7 +103,7 @@ const Indopok = () => {
               About
             </a>
             <a href="#features" onClick={(e) => handleAnchor(e, "features")} className="hover:text-accent transition-colors">
-              Investment
+              Project
             </a>
             <a href="#location" onClick={(e) => handleAnchor(e, "location")} className="hover:text-accent transition-colors">
               Location
@@ -115,7 +115,7 @@ const Indopok = () => {
 
           <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-md">
             <Link to="/superbabi">
-              Super Babi Investment
+              Project Dashboard
               <ArrowRight className="h-4 w-4 ml-1" />
             </Link>
           </Button>
