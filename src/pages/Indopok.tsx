@@ -419,9 +419,9 @@ const Indopok = () => {
             </p>
             <ul className="space-y-2 text-sm text-sidebar-foreground/80">
               <li><a href="#about" onClick={(e) => handleAnchor(e, "about")} className="hover:text-accent transition-colors">About</a></li>
-              <li><a href="#features" onClick={(e) => handleAnchor(e, "features")} className="hover:text-accent transition-colors">Investment</a></li>
+              <li><a href="#features" onClick={(e) => handleAnchor(e, "features")} className="hover:text-accent transition-colors">Project</a></li>
               <li><a href="#location" onClick={(e) => handleAnchor(e, "location")} className="hover:text-accent transition-colors">Location</a></li>
-              <li><Link to="/superbabi" className="hover:text-accent transition-colors">Super Babi</Link></li>
+              <li><Link to="/superbabi" className="hover:text-accent transition-colors">Project Dashboard</Link></li>
             </ul>
           </div>
 
