@@ -54,7 +54,7 @@ const Dashboard = () => {
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate("/login"); return; }
+      if (!user) { navigate("/superbabi/login"); return; }
       setUserId(user.id);
 
       // Use Asia/Jakarta (WIB) date so rates effective "today" in Indonesia
