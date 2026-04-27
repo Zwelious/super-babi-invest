@@ -192,7 +192,7 @@ const Dashboard = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/");
+    navigate("/superbabi");
   };
 
   const getStatusBadge = (date: string) => {
