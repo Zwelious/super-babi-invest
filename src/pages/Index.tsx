@@ -189,7 +189,7 @@ const Index = () => {
             )}
           </p>
           <Button size="lg" asChild>
-            <Link to="/register">{t("Register Now", "Daftar Sekarang")}</Link>
+            <Link to="/superbabi/register">{t("Register Now", "Daftar Sekarang")}</Link>
           </Button>
         </div>
       </section>
