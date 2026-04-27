@@ -78,7 +78,7 @@ const Login = () => {
               </Button>
               <p className="text-center text-sm text-muted-foreground">
                 {t("Not a member yet?", "Belum menjadi anggota?")}{" "}
-                <Link to="/register" className="text-primary hover:underline">{t("Register here", "Daftar di sini")}</Link>
+                <Link to="/superbabi/register" className="text-primary hover:underline">{t("Register here", "Daftar di sini")}</Link>
               </p>
             </form>
           </CardContent>
