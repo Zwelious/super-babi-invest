@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-const DEPOSIT_UNIT = 3500000;
+const DEFAULT_UNIT_PRICE = 3500000;
 
 const Dashboard = () => {
   const { t } = useLanguage();
@@ -27,6 +27,7 @@ const Dashboard = () => {
   const [investments, setInvestments] = useState<any[]>([]);
   const [deposits, setDeposits] = useState<any[]>([]);
   const [masterRate, setMasterRate] = useState(30);
+  const [unitPrice, setUnitPrice] = useState(DEFAULT_UNIT_PRICE);
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedDepositId, setSelectedDepositId] = useState<string | null>(null);
@@ -65,11 +66,10 @@ const Dashboard = () => {
         month: "2-digit",
         day: "2-digit",
       }).format(new Date());
-      const [investRes, depositRes, rateRes] = await Promise.all([
+      
+      const [investRes, depositRes, rateRes, settingsRes] = await Promise.all([
         supabase.from("investments").select("*").order("activation_date", { ascending: false }),
         supabase.from("deposits").select("*").order("created_at", { ascending: false }),
-        // Only consider rates whose effective_date is today or earlier — future-dated rates
-        // should not affect transactions made before they take effect.
         supabase
           .from("master_rates")
           .select("*")
@@ -77,16 +77,18 @@ const Dashboard = () => {
           .order("effective_date", { ascending: false })
           .order("created_at", { ascending: false })
           .limit(1),
+        supabase.from("system_settings").select("value").eq("key", "unit_price").maybeSingle(),
       ]);
 
       if (investRes.data) setInvestments(investRes.data);
       if (depositRes.data) setDeposits(depositRes.data);
       if (rateRes.data?.[0]) setMasterRate(Number(rateRes.data[0].rate));
+      if (settingsRes.data?.value) setUnitPrice(Number(settingsRes.data.value));
     };
     init();
   }, [navigate]);
 
-  const depositAmount = depositUnits * DEPOSIT_UNIT;
+  const depositAmount = depositUnits * unitPrice;
   const estimated6Month = depositAmount * (masterRate / 200);
   const estimated12Month = depositAmount * (masterRate / 100);
 
@@ -355,7 +357,7 @@ const Dashboard = () => {
               </DialogHeader>
               <div className="space-y-4 pt-2">
                 <div className="space-y-2">
-                  <Label>{t("Number of Units", "Jumlah Unit")} (1 {t("unit", "unit")} = {formatRp(DEPOSIT_UNIT)})</Label>
+                  <Label>{t("Number of Units", "Jumlah Unit")} (1 {t("unit", "unit")} = {formatRp(unitPrice)})</Label>
                   <Input type="number" min={1} value={depositUnits} onChange={(e) => setDepositUnits(Math.max(1, parseInt(e.target.value) || 1))} />
                   <p className="text-sm text-muted-foreground">{t("Total Deposit", "Total Setoran")}: <span className="font-semibold text-foreground">{formatRp(depositAmount)}</span></p>
                 </div>

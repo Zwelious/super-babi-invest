@@ -38,6 +38,9 @@ const AdminPanel = () => {
   const [disbursements, setDisbursements] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any[]>([]);
+  const [unitPriceInput, setUnitPriceInput] = useState("");
+  const [savingSetting, setSavingSetting] = useState(false);
 
   // Dialog states
   const [activateDialogOpen, setActivateDialogOpen] = useState(false);
@@ -71,7 +74,7 @@ const AdminPanel = () => {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [m, d, inv, r, dis, n, c] = await Promise.all([
+      const [m, d, inv, r, dis, n, c, s] = await Promise.all([
         adminCall("get_members"),
         adminCall("get_deposits"),
         adminCall("get_investments"),
@@ -79,6 +82,7 @@ const AdminPanel = () => {
         adminCall("get_disbursements"),
         adminCall("get_notifications"),
         adminCall("get_deposit_chart"),
+        adminCall("get_settings"),
       ]);
       setMembers(m || []);
       setDeposits(d || []);
@@ -87,6 +91,9 @@ const AdminPanel = () => {
       setDisbursements(dis || []);
       setNotifications(n || []);
       setChartData(c || []);
+      setSettings(s || []);
+      const up = (s || []).find((x: any) => x.key === "unit_price");
+      if (up) setUnitPriceInput(String(up.value));
     } catch (err: any) {
       toast({ title: "Failed to load data: " + err.message, variant: "destructive" });
     } finally {
@@ -163,13 +170,14 @@ const AdminPanel = () => {
         <h1 className="font-display text-3xl font-bold mb-6">Admin Panel</h1>
 
         <Tabs defaultValue="members" className="space-y-6">
-          <TabsList className="grid grid-cols-6 w-full max-w-4xl">
+          <TabsList className="grid grid-cols-7 w-full max-w-5xl">
             <TabsTrigger value="members">Members {pendingMembers.length > 0 && `(${pendingMembers.length})`}</TabsTrigger>
             <TabsTrigger value="deposits">Deposits {pendingDeposits.length > 0 && `(${pendingDeposits.length})`}</TabsTrigger>
             <TabsTrigger value="activate">Activate</TabsTrigger>
             <TabsTrigger value="disburse">Disburse</TabsTrigger>
             <TabsTrigger value="rates">Master Rate</TabsTrigger>
             <TabsTrigger value="notify">Notifications</TabsTrigger>
+            <TabsTrigger value="settings">Global Settings</TabsTrigger>
           </TabsList>
 
           {/* Members */}
@@ -655,6 +663,55 @@ const AdminPanel = () => {
                     </TableBody>
                   </Table>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Global Settings */}
+          <TabsContent value="settings">
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-display">Global Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6 max-w-xl">
+                <div className="space-y-2">
+                  <Label htmlFor="unit-price">Unit Price (Rp per unit)</Label>
+                  <Input
+                    id="unit-price"
+                    type="number"
+                    min={1}
+                    step={1000}
+                    value={unitPriceInput}
+                    onChange={(e) => setUnitPriceInput(e.target.value)}
+                    placeholder="3500000"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Current: <strong>{formatRp(Number(settings.find((s: any) => s.key === "unit_price")?.value || 0))}</strong>.
+                    This value is used when members create new deposits.
+                  </p>
+                </div>
+                <Button
+                  disabled={savingSetting || !unitPriceInput || Number(unitPriceInput) <= 0}
+                  onClick={async () => {
+                    setSavingSetting(true);
+                    try {
+                      await adminCall("update_setting", {
+                        key: "unit_price",
+                        value: Number(unitPriceInput),
+                        description: "Harga per unit deposit (Rupiah)",
+                      });
+                      toast({ title: "Unit price updated" });
+                      loadData();
+                    } catch (err: any) {
+                      toast({ title: err.message, variant: "destructive" });
+                    } finally {
+                      setSavingSetting(false);
+                    }
+                  }}
+                >
+                  {savingSetting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Save
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
