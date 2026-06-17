@@ -250,20 +250,64 @@ Deno.serve(async (req) => {
       }
 
       case "add_disbursement": {
+        const { user_id, investment_id, amount, type, disbursement_date } = params;
+        if (!investment_id || !type) {
+          return new Response(JSON.stringify({ error: "investment_id and type are required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        // Block if investment is no longer active
+        const { data: inv, error: invErr } = await supabase
+          .from("investments")
+          .select("status")
+          .eq("id", investment_id)
+          .single();
+        if (invErr) throw invErr;
+        if (inv.status === "disbursed" || inv.status === "completed") {
+          return new Response(JSON.stringify({ error: "This investment has already been disbursed" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        // Block duplicate disbursement of the same type (any non-rejected record)
+        const { data: existing } = await supabase
+          .from("disbursements")
+          .select("id, status")
+          .eq("investment_id", investment_id)
+          .eq("type", type)
+          .neq("status", "rejected");
+        if (existing && existing.length > 0) {
+          return new Response(JSON.stringify({ error: `A ${type} disbursement already exists for this investment` }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
         const { error } = await supabase.from("disbursements").insert({
-          user_id: params.user_id,
-          investment_id: params.investment_id,
-          amount: params.amount,
-          type: params.type,
-          disbursement_date: params.disbursement_date,
+          user_id, investment_id, amount, type, disbursement_date,
         });
         if (error) throw error;
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       case "complete_disbursement": {
+        const { data: disb, error: dErr } = await supabase
+          .from("disbursements")
+          .select("investment_id, type, status")
+          .eq("id", params.id)
+          .single();
+        if (dErr) throw dErr;
+        if (disb.status === "completed") {
+          return new Response(JSON.stringify({ error: "Disbursement already completed" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
         const { error } = await supabase.from("disbursements").update({ status: "completed" }).eq("id", params.id);
         if (error) throw error;
+        // If principal returned, lock the investment as disbursed
+        if (disb.type === "investment_return") {
+          await supabase.from("investments").update({ status: "disbursed" }).eq("id", disb.investment_id);
+        } else {
+          // If both 6 & 12 interest are completed, mark investment as completed
+          const { data: doneRows } = await supabase
+            .from("disbursements")
+            .select("type")
+            .eq("investment_id", disb.investment_id)
+            .eq("status", "completed");
+          const types = new Set((doneRows || []).map((r: any) => r.type));
+          if (types.has("interest_6") && types.has("interest_12")) {
+            await supabase.from("investments").update({ status: "completed" }).eq("id", disb.investment_id);
+          }
+        }
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
