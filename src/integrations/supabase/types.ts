@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       deposits: {
         Row: {
+          activated_amount: number
           amount: number
           created_at: string
           deposit_date: string
@@ -26,6 +27,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          activated_amount?: number
           amount: number
           created_at?: string
           deposit_date?: string
@@ -36,6 +38,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          activated_amount?: number
           amount?: number
           created_at?: string
           deposit_date?: string

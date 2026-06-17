@@ -43,6 +43,7 @@ const AdminPanel = () => {
   const [activateDialogOpen, setActivateDialogOpen] = useState(false);
   const [activateTarget, setActivateTarget] = useState<any>(null);
   const [activationDate, setActivationDate] = useState(new Date().toISOString().split("T")[0]);
+  const [activationAmount, setActivationAmount] = useState("");
   const [disbursementDialogOpen, setDisbursementDialogOpen] = useState(false);
   const [rateDialogOpen, setRateDialogOpen] = useState(false);
   const [notifyDialogOpen, setNotifyDialogOpen] = useState(false);
@@ -282,49 +283,100 @@ const AdminPanel = () => {
             <Card>
               <CardHeader><CardTitle className="font-display">Activate Investments</CardTitle></CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">Activate approved deposits to start the investment period.</p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Activate all or part of an approved deposit. Any outstanding (un-activated) amount stays in the member's
+                  deposit as <strong>Pending Activation</strong> — interest and maturity start only on activated portions.
+                </p>
                 {approvedDeposits.length === 0 ? <p className="text-muted-foreground text-sm">No deposits to activate.</p> : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Deposit ID</TableHead><TableHead>Member</TableHead><TableHead>Amount</TableHead><TableHead>Deposit Date</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead>
+                        <TableHead>Deposit ID</TableHead><TableHead>Member</TableHead><TableHead>Total</TableHead><TableHead>Activated</TableHead><TableHead>Outstanding</TableHead><TableHead>Deposit Date</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {approvedDeposits.map((d) => (
-                        <TableRow key={d.id}>
-                          <TableCell className="font-mono text-xs">{d.id.slice(0, 8).toUpperCase()}</TableCell>
-                          <TableCell className="font-medium">{d.member_name}</TableCell>
-                          <TableCell>{formatRp(Number(d.amount))}</TableCell>
-                          <TableCell>{d.deposit_date}</TableCell>
-                          <TableCell>
-                            {d.status === "activated" ? <Badge className="bg-primary/20 text-primary">Activated</Badge> : <Badge variant="outline">Approved</Badge>}
-                          </TableCell>
-                          <TableCell>
-                            {d.status === "approved" && (
-                              <Dialog open={activateDialogOpen && activateTarget?.id === d.id} onOpenChange={(open) => { setActivateDialogOpen(open); if (open) setActivateTarget(d); }}>
-                                <DialogTrigger asChild><Button size="sm">Activate</Button></DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader><DialogTitle className="font-display">Activate Investment</DialogTitle></DialogHeader>
-                                  <div className="space-y-4 pt-2">
-                                    <p className="text-sm text-muted-foreground">Activating <strong>{d.member_name}</strong>'s deposit of <strong>{formatRp(Number(d.amount))}</strong></p>
-                                    <div className="space-y-2">
-                                      <Label>Activation Date</Label>
-                                      <Input type="date" value={activationDate} onChange={(e) => setActivationDate(e.target.value)} />
+                      {approvedDeposits.map((d) => {
+                        const total = Number(d.amount);
+                        const activated = Number(d.activated_amount || 0);
+                        const outstanding = total - activated;
+                        return (
+                          <TableRow key={d.id}>
+                            <TableCell className="font-mono text-xs">{d.id.slice(0, 8).toUpperCase()}</TableCell>
+                            <TableCell className="font-medium">{d.member_name}</TableCell>
+                            <TableCell>{formatRp(total)}</TableCell>
+                            <TableCell>{formatRp(activated)}</TableCell>
+                            <TableCell className="font-semibold">{formatRp(outstanding)}</TableCell>
+                            <TableCell>{d.deposit_date}</TableCell>
+                            <TableCell>
+                              {d.status === "activated" ? (
+                                <Badge className="bg-primary/20 text-primary">Fully Activated</Badge>
+                              ) : activated > 0 ? (
+                                <Badge variant="secondary">Partial</Badge>
+                              ) : (
+                                <Badge variant="outline">Approved</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {d.status === "approved" && outstanding > 0 && (
+                                <Dialog open={activateDialogOpen && activateTarget?.id === d.id} onOpenChange={(open) => { setActivateDialogOpen(open); if (open) { setActivateTarget(d); setActivationAmount(String(outstanding)); } }}>
+                                  <DialogTrigger asChild><Button size="sm">Activate</Button></DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader><DialogTitle className="font-display">Activate Investment</DialogTitle></DialogHeader>
+                                    <div className="space-y-4 pt-2">
+                                      <div className="text-sm text-muted-foreground space-y-1">
+                                        <p>Member: <strong className="text-foreground">{d.member_name}</strong></p>
+                                        <p>Deposit total: <strong className="text-foreground">{formatRp(total)}</strong></p>
+                                        <p>Already activated: <strong className="text-foreground">{formatRp(activated)}</strong></p>
+                                        <p>Outstanding: <strong className="text-foreground">{formatRp(outstanding)}</strong></p>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label>Activation Amount (Rp)</Label>
+                                        <Input
+                                          type="number"
+                                          min={1}
+                                          max={outstanding}
+                                          value={activationAmount}
+                                          onChange={(e) => setActivationAmount(e.target.value)}
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                          Enter any amount from 1 up to the outstanding {formatRp(outstanding)}.
+                                          The remainder will stay as Pending Activation.
+                                        </p>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label>Activation Date</Label>
+                                        <Input type="date" value={activationDate} onChange={(e) => setActivationDate(e.target.value)} />
+                                      </div>
+                                      <Button
+                                        className="w-full"
+                                        disabled={!activationAmount || Number(activationAmount) <= 0 || Number(activationAmount) > outstanding}
+                                        onClick={async () => {
+                                          const amt = Number(activationAmount);
+                                          if (!Number.isFinite(amt) || amt <= 0) {
+                                            toast({ title: "Activation amount must be greater than 0", variant: "destructive" });
+                                            return;
+                                          }
+                                          if (amt > outstanding + 0.001) {
+                                            toast({ title: `Amount cannot exceed outstanding (${formatRp(outstanding)})`, variant: "destructive" });
+                                            return;
+                                          }
+                                          await handleAction("activate_investment", {
+                                            deposit_id: d.id, user_id: d.user_id, amount: amt, activation_date: activationDate,
+                                          }, amt < outstanding ? "Partial activation recorded" : "Investment fully activated");
+                                          setActivateDialogOpen(false);
+                                          setActivationAmount("");
+                                        }}
+                                      >
+                                        Activate {activationAmount && Number(activationAmount) > 0 ? formatRp(Number(activationAmount)) : ""}
+                                      </Button>
                                     </div>
-                                    <Button className="w-full" onClick={async () => {
-                                      await handleAction("activate_investment", {
-                                        deposit_id: d.id, user_id: d.user_id, amount: Number(d.amount), activation_date: activationDate,
-                                      }, "Investment activated");
-                                      setActivateDialogOpen(false);
-                                    }}>Activate Investment</Button>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                                  </DialogContent>
+                                </Dialog>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 )}
