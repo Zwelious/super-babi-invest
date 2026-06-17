@@ -66,7 +66,7 @@ const Dashboard = () => {
         month: "2-digit",
         day: "2-digit",
       }).format(new Date());
-      const [investRes, depositRes, rateRes] = await Promise.all([
+      
       const [investRes, depositRes, rateRes, settingsRes] = await Promise.all([
         supabase.from("investments").select("*").order("activation_date", { ascending: false }),
         supabase.from("deposits").select("*").order("created_at", { ascending: false }),
