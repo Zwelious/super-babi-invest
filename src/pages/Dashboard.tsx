@@ -67,10 +67,9 @@ const Dashboard = () => {
         day: "2-digit",
       }).format(new Date());
       const [investRes, depositRes, rateRes] = await Promise.all([
+      const [investRes, depositRes, rateRes, settingsRes] = await Promise.all([
         supabase.from("investments").select("*").order("activation_date", { ascending: false }),
         supabase.from("deposits").select("*").order("created_at", { ascending: false }),
-        // Only consider rates whose effective_date is today or earlier — future-dated rates
-        // should not affect transactions made before they take effect.
         supabase
           .from("master_rates")
           .select("*")
@@ -78,16 +77,18 @@ const Dashboard = () => {
           .order("effective_date", { ascending: false })
           .order("created_at", { ascending: false })
           .limit(1),
+        supabase.from("system_settings").select("value").eq("key", "unit_price").maybeSingle(),
       ]);
 
       if (investRes.data) setInvestments(investRes.data);
       if (depositRes.data) setDeposits(depositRes.data);
       if (rateRes.data?.[0]) setMasterRate(Number(rateRes.data[0].rate));
+      if (settingsRes.data?.value) setUnitPrice(Number(settingsRes.data.value));
     };
     init();
   }, [navigate]);
 
-  const depositAmount = depositUnits * DEPOSIT_UNIT;
+  const depositAmount = depositUnits * unitPrice;
   const estimated6Month = depositAmount * (masterRate / 200);
   const estimated12Month = depositAmount * (masterRate / 100);
 
