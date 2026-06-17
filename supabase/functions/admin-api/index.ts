@@ -52,6 +52,20 @@ Deno.serve(async (req) => {
         console.log("Forbidden: dep.user_id=", dep?.user_id, "auth uid=", userData.user.id);
         return new Response(JSON.stringify({ error: "Forbidden: deposit does not belong to user" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
+
+      // Validate receipt_url path stays within the user's own storage folder ({user_id}/...)
+      const rawPath = typeof params.receipt_url === "string" ? params.receipt_url : "";
+      const expectedPrefix = `${userData.user.id}/`;
+      const isValidPath =
+        rawPath.length > expectedPrefix.length &&
+        rawPath.startsWith(expectedPrefix) &&
+        !rawPath.includes("..") &&
+        !rawPath.includes("\\") &&
+        !rawPath.startsWith("/");
+      if (!isValidPath) {
+        console.log("Invalid receipt path for user:", userData.user.id, "path:", rawPath);
+        return new Response(JSON.stringify({ error: "Invalid receipt path" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
     }
 
 
