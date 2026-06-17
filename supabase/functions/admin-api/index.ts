@@ -305,6 +305,24 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify(chartData), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
+      case "get_settings": {
+        const { data, error } = await supabase.from("system_settings").select("*").order("key");
+        if (error) throw error;
+        return new Response(JSON.stringify(data), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      case "update_setting": {
+        const valNum = Number(params.value);
+        if (!params.key || !Number.isFinite(valNum) || valNum <= 0) {
+          return new Response(JSON.stringify({ error: "Invalid key or value" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        const { error } = await supabase
+          .from("system_settings")
+          .upsert({ key: params.key, value: valNum, description: params.description ?? null }, { onConflict: "key" });
+        if (error) throw error;
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
