@@ -357,7 +357,7 @@ const Dashboard = () => {
               </DialogHeader>
               <div className="space-y-4 pt-2">
                 <div className="space-y-2">
-                  <Label>{t("Number of Units", "Jumlah Unit")} (1 {t("unit", "unit")} = {formatRp(DEPOSIT_UNIT)})</Label>
+                  <Label>{t("Number of Units", "Jumlah Unit")} (1 {t("unit", "unit")} = {formatRp(unitPrice)})</Label>
                   <Input type="number" min={1} value={depositUnits} onChange={(e) => setDepositUnits(Math.max(1, parseInt(e.target.value) || 1))} />
                   <p className="text-sm text-muted-foreground">{t("Total Deposit", "Total Setoran")}: <span className="font-semibold text-foreground">{formatRp(depositAmount)}</span></p>
                 </div>
