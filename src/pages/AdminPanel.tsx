@@ -74,7 +74,7 @@ const AdminPanel = () => {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [m, d, inv, r, dis, n, c] = await Promise.all([
+      const [m, d, inv, r, dis, n, c, s] = await Promise.all([
         adminCall("get_members"),
         adminCall("get_deposits"),
         adminCall("get_investments"),
@@ -82,6 +82,7 @@ const AdminPanel = () => {
         adminCall("get_disbursements"),
         adminCall("get_notifications"),
         adminCall("get_deposit_chart"),
+        adminCall("get_settings"),
       ]);
       setMembers(m || []);
       setDeposits(d || []);
@@ -90,6 +91,9 @@ const AdminPanel = () => {
       setDisbursements(dis || []);
       setNotifications(n || []);
       setChartData(c || []);
+      setSettings(s || []);
+      const up = (s || []).find((x: any) => x.key === "unit_price");
+      if (up) setUnitPriceInput(String(up.value));
     } catch (err: any) {
       toast({ title: "Failed to load data: " + err.message, variant: "destructive" });
     } finally {
