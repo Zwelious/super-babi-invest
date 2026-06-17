@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-const DEPOSIT_UNIT = 3500000;
+const DEFAULT_UNIT_PRICE = 3500000;
 
 const Dashboard = () => {
   const { t } = useLanguage();
