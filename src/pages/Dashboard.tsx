@@ -27,6 +27,7 @@ const Dashboard = () => {
   const [investments, setInvestments] = useState<any[]>([]);
   const [deposits, setDeposits] = useState<any[]>([]);
   const [masterRate, setMasterRate] = useState(30);
+  const [unitPrice, setUnitPrice] = useState(DEFAULT_UNIT_PRICE);
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedDepositId, setSelectedDepositId] = useState<string | null>(null);
