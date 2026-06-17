@@ -120,6 +120,28 @@ Deno.serve(async (req) => {
 
       case "activate_investment": {
         const { deposit_id, user_id, amount, activation_date } = params;
+        const activationAmt = Number(amount);
+        if (!Number.isFinite(activationAmt) || activationAmt <= 0) {
+          return new Response(JSON.stringify({ error: "Activation amount must be greater than 0" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        // Validate against outstanding (deposit.amount - activated_amount)
+        const { data: dep, error: depErr } = await supabase
+          .from("deposits")
+          .select("amount, activated_amount, status")
+          .eq("id", deposit_id)
+          .single();
+        if (depErr) throw depErr;
+        const total = Number(dep.amount);
+        const alreadyActivated = Number(dep.activated_amount || 0);
+        const outstanding = total - alreadyActivated;
+        if (activationAmt > outstanding + 0.001) {
+          return new Response(JSON.stringify({ error: `Activation amount exceeds outstanding (${outstanding})` }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (dep.status !== "approved") {
+          return new Response(JSON.stringify({ error: "Deposit is not in approved status" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
         const actDate = new Date(activation_date);
         const mat6 = new Date(actDate);
         mat6.setMonth(mat6.getMonth() + 6);
@@ -135,13 +157,13 @@ Deno.serve(async (req) => {
           .order("created_at", { ascending: false })
           .limit(1);
         const rate = Number(rates?.[0]?.rate) || 30;
-        const return6 = amount * (rate / 200);
-        const return12 = amount * (rate / 100);
+        const return6 = activationAmt * (rate / 200);
+        const return12 = activationAmt * (rate / 100);
 
         const { error } = await supabase.from("investments").insert({
           user_id,
           deposit_id,
-          amount,
+          amount: activationAmt,
           activation_date,
           maturity_6_date: mat6.toISOString().split("T")[0],
           maturity_12_date: mat12.toISOString().split("T")[0],
@@ -150,10 +172,18 @@ Deno.serve(async (req) => {
         });
         if (error) throw error;
 
-        // Update deposit status
-        await supabase.from("deposits").update({ status: "activated" }).eq("id", deposit_id);
+        // Update deposit: bump activated_amount; mark "activated" only when fully consumed
+        const newActivated = alreadyActivated + activationAmt;
+        const fullyActivated = newActivated >= total - 0.001;
+        await supabase
+          .from("deposits")
+          .update({
+            activated_amount: newActivated,
+            status: fullyActivated ? "activated" : "approved",
+          })
+          .eq("id", deposit_id);
 
-        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ success: true, fully_activated: fullyActivated, outstanding: total - newActivated }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       case "get_investments": {
