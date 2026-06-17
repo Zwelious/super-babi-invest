@@ -38,6 +38,9 @@ const AdminPanel = () => {
   const [disbursements, setDisbursements] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any[]>([]);
+  const [unitPriceInput, setUnitPriceInput] = useState("");
+  const [savingSetting, setSavingSetting] = useState(false);
 
   // Dialog states
   const [activateDialogOpen, setActivateDialogOpen] = useState(false);
