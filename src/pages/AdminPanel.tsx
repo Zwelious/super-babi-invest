@@ -170,13 +170,14 @@ const AdminPanel = () => {
         <h1 className="font-display text-3xl font-bold mb-6">Admin Panel</h1>
 
         <Tabs defaultValue="members" className="space-y-6">
-          <TabsList className="grid grid-cols-6 w-full max-w-4xl">
+          <TabsList className="grid grid-cols-7 w-full max-w-5xl">
             <TabsTrigger value="members">Members {pendingMembers.length > 0 && `(${pendingMembers.length})`}</TabsTrigger>
             <TabsTrigger value="deposits">Deposits {pendingDeposits.length > 0 && `(${pendingDeposits.length})`}</TabsTrigger>
             <TabsTrigger value="activate">Activate</TabsTrigger>
             <TabsTrigger value="disburse">Disburse</TabsTrigger>
             <TabsTrigger value="rates">Master Rate</TabsTrigger>
             <TabsTrigger value="notify">Notifications</TabsTrigger>
+            <TabsTrigger value="settings">Global Settings</TabsTrigger>
           </TabsList>
 
           {/* Members */}
