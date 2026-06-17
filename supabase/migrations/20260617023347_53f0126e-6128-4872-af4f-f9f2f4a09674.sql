@@ -1,0 +1,1 @@
+ALTER TABLE public.deposits ADD COLUMN IF NOT EXISTS activated_amount NUMERIC NOT NULL DEFAULT 0;
