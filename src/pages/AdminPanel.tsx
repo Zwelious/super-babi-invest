@@ -421,7 +421,7 @@ const AdminPanel = () => {
                           }
                         }}>
                           <option value="">Select investment...</option>
-                          {investments.filter(i => i.user_id === disbMemberId).map(i => <option key={i.id} value={i.id}>{formatRp(Number(i.amount))} - {i.activation_date}</option>)}
+                          {investments.filter(i => i.user_id === disbMemberId && i.status === "active").map(i => <option key={i.id} value={i.id}>{formatRp(Number(i.amount))} - {i.activation_date}</option>)}
                         </select>
                       </div>
                       <div className="space-y-2">
@@ -436,9 +436,20 @@ const AdminPanel = () => {
                           }
                         }}>
                           <option value="">Select...</option>
-                          <option value="interest_6">Interest (6-month)</option>
-                          <option value="interest_12">Interest (12-month)</option>
-                          <option value="investment_return">Investment Return</option>
+                          {(() => {
+                            const usedTypes = new Set(
+                              disbursements
+                                .filter((d) => d.investment_id === disbInvestmentId && d.status !== "rejected")
+                                .map((d) => d.type)
+                            );
+                            return (
+                              <>
+                                <option value="interest_6" disabled={usedTypes.has("interest_6")}>Interest (6-month){usedTypes.has("interest_6") ? " — already disbursed" : ""}</option>
+                                <option value="interest_12" disabled={usedTypes.has("interest_12")}>Interest (12-month){usedTypes.has("interest_12") ? " — already disbursed" : ""}</option>
+                                <option value="investment_return" disabled={usedTypes.has("investment_return")}>Investment Return{usedTypes.has("investment_return") ? " — already disbursed" : ""}</option>
+                              </>
+                            );
+                          })()}
                         </select>
                       </div>
                       <div className="space-y-2">
