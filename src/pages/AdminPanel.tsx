@@ -666,6 +666,55 @@ const AdminPanel = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Global Settings */}
+          <TabsContent value="settings">
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-display">Global Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6 max-w-xl">
+                <div className="space-y-2">
+                  <Label htmlFor="unit-price">Unit Price (Rp per unit)</Label>
+                  <Input
+                    id="unit-price"
+                    type="number"
+                    min={1}
+                    step={1000}
+                    value={unitPriceInput}
+                    onChange={(e) => setUnitPriceInput(e.target.value)}
+                    placeholder="3500000"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Current: <strong>{formatRp(Number(settings.find((s: any) => s.key === "unit_price")?.value || 0))}</strong>.
+                    This value is used when members create new deposits.
+                  </p>
+                </div>
+                <Button
+                  disabled={savingSetting || !unitPriceInput || Number(unitPriceInput) <= 0}
+                  onClick={async () => {
+                    setSavingSetting(true);
+                    try {
+                      await adminCall("update_setting", {
+                        key: "unit_price",
+                        value: Number(unitPriceInput),
+                        description: "Harga per unit deposit (Rupiah)",
+                      });
+                      toast({ title: "Unit price updated" });
+                      loadData();
+                    } catch (err: any) {
+                      toast({ title: err.message, variant: "destructive" });
+                    } finally {
+                      setSavingSetting(false);
+                    }
+                  }}
+                >
+                  {savingSetting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Save
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
 
         <Dialog open={!!viewNotification} onOpenChange={(open) => { if (!open) setViewNotification(null); }}>
