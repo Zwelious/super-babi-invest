@@ -421,7 +421,7 @@ const AdminPanel = () => {
                           }
                         }}>
                           <option value="">Select investment...</option>
-                          {investments.filter(i => i.user_id === disbMemberId).map(i => <option key={i.id} value={i.id}>{formatRp(Number(i.amount))} - {i.activation_date}</option>)}
+                          {investments.filter(i => i.user_id === disbMemberId && i.status === "active").map(i => <option key={i.id} value={i.id}>{formatRp(Number(i.amount))} - {i.activation_date}</option>)}
                         </select>
                       </div>
                       <div className="space-y-2">
