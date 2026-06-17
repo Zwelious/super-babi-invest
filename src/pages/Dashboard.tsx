@@ -92,6 +92,9 @@ const Dashboard = () => {
 
   const totalDeposited = deposits.reduce((sum, d) => sum + Number(d.amount), 0);
   const totalActive = investments.filter(i => i.status === "active").reduce((sum, i) => sum + Number(i.amount), 0);
+  const totalPendingActivation = deposits
+    .filter(d => d.status === "approved" || d.status === "activated")
+    .reduce((sum, d) => sum + Math.max(0, Number(d.amount) - Number(d.activated_amount || 0)), 0);
 
   const handleDeposit = async () => {
     if (!userId) return;
@@ -224,7 +227,7 @@ const Dashboard = () => {
         <h1 className="font-display text-3xl font-bold">{t("Investment Dashboard", "Dashboard Investasi")}</h1>
 
         {/* Summary Cards */}
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">{t("Total Deposited", "Total Setoran")}</CardTitle>
@@ -239,6 +242,20 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-primary">{formatRp(totalActive)}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-muted-foreground">{t("Pending Activation", "Menunggu Aktivasi")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-accent">{formatRp(totalPendingActivation)}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t(
+                  "Approved deposits not yet allocated to a batch. Interest starts on activation.",
+                  "Setoran disetujui yang belum dialokasikan ke batch. Bunga dihitung saat aktivasi."
+                )}
+              </p>
             </CardContent>
           </Card>
         </div>
