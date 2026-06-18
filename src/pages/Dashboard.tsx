@@ -32,6 +32,12 @@ const Dashboard = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedDepositId, setSelectedDepositId] = useState<string | null>(null);
   const [depositFile, setDepositFile] = useState<File | null>(null);
+  const [expandedDeposits, setExpandedDeposits] = useState<Set<string>>(new Set());
+  const toggleExpanded = (id: string) => setExpandedDeposits(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
