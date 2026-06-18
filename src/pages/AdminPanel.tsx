@@ -548,7 +548,10 @@ const AdminPanel = () => {
                       <div className="space-y-2">
                         <Label>Annual Rate (%)</Label>
                         <Input type="number" min={0.01} step="0.01" value={newRate} onChange={(e) => setNewRate(e.target.value)} placeholder="0" />
-                        <p className="text-xs text-muted-foreground">Must be greater than 0.</p>
+                        <p className="text-xs text-muted-foreground">
+                          Must be greater than 0. Annual rate is split equally — 6-month payout = {(Number(newRate) / 2 || 0).toFixed(2)}%, 12-month payout = {(Number(newRate) / 2 || 0).toFixed(2)}%.
+                        </p>
+                        <p className="text-xs text-muted-foreground">A new history row is created; existing rates are never overwritten.</p>
                       </div>
                       <div className="space-y-2"><Label>Effective Date</Label><Input type="date" value={newRateDate} onChange={(e) => setNewRateDate(e.target.value)} /></div>
                       <Button className="w-full" disabled={!newRate || !newRateDate || Number(newRate) <= 0} onClick={async () => {
@@ -567,7 +570,7 @@ const AdminPanel = () => {
               <CardContent>
                 {rates.length === 0 ? <p className="text-muted-foreground text-sm">No rates configured.</p> : (
                   <Table>
-                    <TableHeader><TableRow><TableHead>Annual Rate</TableHead><TableHead>Effective Date (WIB)</TableHead><TableHead>Created (WIB)</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Annual Rate</TableHead><TableHead>6-mo Payout</TableHead><TableHead>12-mo Payout</TableHead><TableHead>Effective Date (WIB)</TableHead><TableHead>Created (WIB)</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {(() => {
                         const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
@@ -599,6 +602,8 @@ const AdminPanel = () => {
                           return (
                             <TableRow key={r.id}>
                               <TableCell className="font-bold text-lg">{r.rate}%</TableCell>
+                              <TableCell className="text-primary font-semibold">{(Number(r.rate) / 2).toFixed(2)}%</TableCell>
+                              <TableCell className="text-primary font-semibold">{(Number(r.rate) / 2).toFixed(2)}%</TableCell>
                               <TableCell>{r.effective_date}</TableCell>
                               <TableCell className="text-muted-foreground text-sm">{created} WIB</TableCell>
                               <TableCell>

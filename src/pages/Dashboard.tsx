@@ -89,8 +89,9 @@ const Dashboard = () => {
   }, [navigate]);
 
   const depositAmount = depositUnits * unitPrice;
+  // Master rate is annual and split equally between the two milestones.
   const estimated6Month = depositAmount * (masterRate / 200);
-  const estimated12Month = depositAmount * (masterRate / 100);
+  const estimated12Month = depositAmount * (masterRate / 200);
 
   const totalDeposited = deposits.reduce((sum, d) => sum + Number(d.amount), 0);
   const totalActive = investments.filter(i => i.status === "active").reduce((sum, i) => sum + Number(i.amount), 0);

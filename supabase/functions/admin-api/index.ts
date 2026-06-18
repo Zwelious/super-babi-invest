@@ -171,8 +171,10 @@ Deno.serve(async (req) => {
           .order("created_at", { ascending: false })
           .limit(1);
         const rate = Number(rates?.[0]?.rate) || 30;
+        // Annual master rate is split equally across the two milestones.
+        // 6-month payout = rate/2 %  |  12-month payout = rate/2 %
         const return6 = activationAmt * (rate / 200);
-        const return12 = activationAmt * (rate / 100);
+        const return12 = activationAmt * (rate / 200);
 
         const { error } = await supabase.from("investments").insert({
           user_id,
