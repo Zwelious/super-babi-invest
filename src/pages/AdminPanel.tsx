@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -466,87 +467,124 @@ const AdminPanel = () => {
                       <div className="space-y-2">
                         <Label>Investment</Label>
                         <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={disbInvestmentId} onChange={(e) => {
-                          const id = e.target.value;
-                          setDisbInvestmentId(id);
-                          const inv = investments.find(i => i.id === id);
-                          if (inv && disbType) {
-                            const auto = disbType === "interest_6" ? Number(inv.return_6) : disbType === "interest_12" ? Number(inv.return_12) : disbType === "investment_return" ? Number(inv.amount) : 0;
-                            if (auto > 0) setDisbAmount(String(auto));
-                          }
+                          setDisbInvestmentId(e.target.value);
+                          setDisbType("");
                         }}>
                           <option value="">Select investment...</option>
                           {investments.filter(i => i.user_id === disbMemberId && i.status === "active").map(i => <option key={i.id} value={i.id}>{formatRp(Number(i.amount))} - {i.activation_date}</option>)}
                         </select>
                       </div>
-                      <div className="space-y-2">
-                        <Label>Type</Label>
-                        <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={disbType} onChange={(e) => {
-                          const t = e.target.value;
-                          setDisbType(t);
-                          const inv = investments.find(i => i.id === disbInvestmentId);
-                          if (inv && t) {
-                            const auto = t === "interest_6" ? Number(inv.return_6) : t === "interest_12" ? Number(inv.return_12) : t === "investment_return" ? Number(inv.amount) : 0;
-                            if (auto > 0) setDisbAmount(String(auto));
-                          }
-                        }}>
-                          <option value="">Select...</option>
-                          {(() => {
-                            const usedTypes = new Set(
-                              disbursements
-                                .filter((d) => d.investment_id === disbInvestmentId && d.status !== "rejected")
-                                .map((d) => d.type)
-                            );
-                            return (
-                              <>
-                                <option value="interest_6" disabled={usedTypes.has("interest_6")}>Interest (6-month){usedTypes.has("interest_6") ? " — already disbursed" : ""}</option>
-                                <option value="interest_12" disabled={usedTypes.has("interest_12")}>Interest (12-month){usedTypes.has("interest_12") ? " — already disbursed" : ""}</option>
-                                <option value="investment_return" disabled={usedTypes.has("investment_return")}>Investment Return{usedTypes.has("investment_return") ? " — already disbursed" : ""}</option>
-                              </>
-                            );
-                          })()}
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Amount (Rp)</Label>
-                        <Input type="number" value={disbAmount} onChange={(e) => setDisbAmount(e.target.value)} />
-                        <p className="text-xs text-muted-foreground">Auto-filled from the investment + type. You can override if needed.</p>
-                      </div>
                       {(() => {
                         const selectedInv = investments.find(i => i.id === disbInvestmentId);
+                        const today = new Date().toISOString().split("T")[0];
+                        const usedTypes = new Set(
+                          disbursements
+                            .filter((d) => d.investment_id === disbInvestmentId && d.status !== "rejected")
+                            .map((d) => d.type)
+                        );
+                        const matFor = (t: string) =>
+                          t === "interest_6" ? selectedInv?.maturity_6_date :
+                          t === "interest_12" ? selectedInv?.maturity_12_date :
+                          selectedInv?.maturity_12_date;
+                        const isMatured = (t: string) => {
+                          const m = matFor(t);
+                          return m ? today >= m : false;
+                        };
+                        const amountFor = (t: string) =>
+                          t === "interest_6" ? Number(selectedInv?.return_6 || 0) :
+                          t === "interest_12" ? Number(selectedInv?.return_12 || 0) :
+                          t === "investment_return" ? Number(selectedInv?.amount || 0) : 0;
+                        const typeOptions = [
+                          { value: "interest_6", label: "Interest (6-month)" },
+                          { value: "interest_12", label: "Interest (12-month)" },
+                          { value: "investment_return", label: "Investment Return" },
+                        ];
+                        const selectedMat = disbType ? matFor(disbType) : null;
+                        const selectedMatured = disbType ? isMatured(disbType) : false;
+                        const selectedAmount = disbType ? amountFor(disbType) : 0;
                         const minDate = selectedInv?.activation_date;
+                        const submitDisabled =
+                          !disbMemberId || !disbInvestmentId || !disbType || !disbDate ||
+                          !selectedMatured || usedTypes.has(disbType);
+
                         return (
-                          <div className="space-y-2">
-                            <Label>Date</Label>
-                            <Input type="date" value={disbDate} min={minDate} onChange={(e) => setDisbDate(e.target.value)} />
-                            {minDate && (
-                              <p className="text-xs text-muted-foreground">Must be on or after the investment activation date ({minDate}).</p>
+                          <>
+                            <div className="space-y-2">
+                              <Label>Type</Label>
+                              <select
+                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                value={disbType}
+                                onChange={(e) => setDisbType(e.target.value)}
+                                disabled={!selectedInv}
+                              >
+                                <option value="">Select...</option>
+                                {typeOptions.map((opt) => {
+                                  const used = usedTypes.has(opt.value);
+                                  const matured = isMatured(opt.value);
+                                  const m = matFor(opt.value);
+                                  const suffix = used
+                                    ? " — already disbursed"
+                                    : !matured
+                                      ? ` — matures ${m}`
+                                      : "";
+                                  return (
+                                    <option key={opt.value} value={opt.value} disabled={used || !matured}>
+                                      {opt.label}{suffix}
+                                    </option>
+                                  );
+                                })}
+                              </select>
+                            </div>
+                            {disbType && selectedInv && (
+                              <div className="rounded-md border bg-muted/40 p-3 space-y-1">
+                                <p className="text-xs text-muted-foreground">Amount to disburse (fixed entitlement)</p>
+                                <p className="text-lg font-semibold">{formatRp(selectedAmount)}</p>
+                                <p className="text-xs text-muted-foreground">Maturity date: {selectedMat}{!selectedMatured && " — not yet reached"}</p>
+                              </div>
                             )}
-                          </div>
+                            <div className="space-y-2">
+                              <Label>Date</Label>
+                              <Input
+                                type="date"
+                                value={disbDate}
+                                min={selectedMat && minDate && selectedMat > minDate ? selectedMat : minDate}
+                                onChange={(e) => setDisbDate(e.target.value)}
+                              />
+                              {selectedMat && (
+                                <p className="text-xs text-muted-foreground">Must be on or after the maturity date ({selectedMat}).</p>
+                              )}
+                            </div>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="block">
+                                    <Button
+                                      className="w-full"
+                                      disabled={submitDisabled}
+                                      onClick={async () => {
+                                        if (!selectedMatured) {
+                                          toast({ title: "Maturity date not reached", variant: "destructive" });
+                                          return;
+                                        }
+                                        await handleAction(
+                                          "add_disbursement",
+                                          { user_id: disbMemberId, investment_id: disbInvestmentId, type: disbType, disbursement_date: disbDate },
+                                          "Disbursement recorded",
+                                        );
+                                        setDisbursementDialogOpen(false);
+                                        setDisbType(""); setDisbAmount(""); setDisbDate(""); setDisbMemberId(""); setDisbInvestmentId("");
+                                      }}
+                                    >Record {disbType ? `— ${formatRp(selectedAmount)}` : ""}</Button>
+                                  </span>
+                                </TooltipTrigger>
+                                {disbType && !selectedMatured && (
+                                  <TooltipContent>Maturity date not reached.</TooltipContent>
+                                )}
+                              </Tooltip>
+                            </TooltipProvider>
+                          </>
                         );
                       })()}
-                      <Button
-                        className="w-full"
-                        disabled={!disbMemberId || !disbInvestmentId || !disbType || !disbDate || !disbAmount || Number(disbAmount) <= 0}
-                        onClick={async () => {
-                          if (!disbMemberId || !disbInvestmentId || !disbType || !disbDate) {
-                            toast({ title: "Please fill in all fields", variant: "destructive" });
-                            return;
-                          }
-                          const amt = Number(disbAmount);
-                          if (!Number.isFinite(amt) || amt <= 0) {
-                            toast({ title: "Amount must be greater than 0", variant: "destructive" });
-                            return;
-                          }
-                          const selectedInv = investments.find(i => i.id === disbInvestmentId);
-                          if (selectedInv && disbDate < selectedInv.activation_date) {
-                            toast({ title: `Disbursement date cannot be earlier than the investment activation date (${selectedInv.activation_date})`, variant: "destructive" });
-                            return;
-                          }
-                          await handleAction("add_disbursement", { user_id: disbMemberId, investment_id: disbInvestmentId, amount: amt, type: disbType, disbursement_date: disbDate }, "Disbursement recorded");
-                          setDisbursementDialogOpen(false);
-                          setDisbType(""); setDisbAmount(""); setDisbDate(""); setDisbMemberId(""); setDisbInvestmentId("");
-                        }}
-                      >Record</Button>
                     </div>
                   </DialogContent>
                 </Dialog>

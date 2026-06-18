@@ -252,21 +252,37 @@ Deno.serve(async (req) => {
       }
 
       case "add_disbursement": {
-        const { user_id, investment_id, amount, type, disbursement_date } = params;
+        const { user_id, investment_id, type, disbursement_date } = params;
         if (!investment_id || !type) {
           return new Response(JSON.stringify({ error: "investment_id and type are required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
-        // Block if investment is no longer active
+        // Load investment with maturity dates and entitlements
         const { data: inv, error: invErr } = await supabase
           .from("investments")
-          .select("status")
+          .select("status, amount, return_6, return_12, maturity_6_date, maturity_12_date, activation_date")
           .eq("id", investment_id)
           .single();
         if (invErr) throw invErr;
         if (inv.status === "disbursed" || inv.status === "completed") {
           return new Response(JSON.stringify({ error: "This investment has already been disbursed" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
-        // Block duplicate disbursement of the same type (any non-rejected record)
+        // Strict maturity check
+        const today = new Date().toISOString().split("T")[0];
+        const matDate =
+          type === "interest_6" ? inv.maturity_6_date :
+          type === "interest_12" ? inv.maturity_12_date :
+          type === "investment_return" ? inv.maturity_12_date :
+          null;
+        if (!matDate) {
+          return new Response(JSON.stringify({ error: "Unknown disbursement type" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (today < matDate) {
+          return new Response(JSON.stringify({ error: `Maturity date not reached (matures ${matDate})` }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (disbursement_date && disbursement_date < matDate) {
+          return new Response(JSON.stringify({ error: `Disbursement date must be on or after maturity (${matDate})` }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        // Block duplicate of same type (any non-rejected record)
         const { data: existing } = await supabase
           .from("disbursements")
           .select("id, status")
@@ -276,11 +292,19 @@ Deno.serve(async (req) => {
         if (existing && existing.length > 0) {
           return new Response(JSON.stringify({ error: `A ${type} disbursement already exists for this investment` }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
+        // Server-computed fixed amount (ignore any client-supplied amount)
+        const fixedAmount =
+          type === "interest_6" ? Number(inv.return_6) :
+          type === "interest_12" ? Number(inv.return_12) :
+          Number(inv.amount);
+        if (!Number.isFinite(fixedAmount) || fixedAmount <= 0) {
+          return new Response(JSON.stringify({ error: "Computed disbursement amount is invalid" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
         const { error } = await supabase.from("disbursements").insert({
-          user_id, investment_id, amount, type, disbursement_date,
+          user_id, investment_id, amount: fixedAmount, type, disbursement_date: disbursement_date || today,
         });
         if (error) throw error;
-        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ success: true, amount: fixedAmount }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       case "complete_disbursement": {
