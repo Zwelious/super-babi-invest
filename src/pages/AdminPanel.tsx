@@ -570,7 +570,7 @@ const AdminPanel = () => {
               <CardContent>
                 {rates.length === 0 ? <p className="text-muted-foreground text-sm">No rates configured.</p> : (
                   <Table>
-                    <TableHeader><TableRow><TableHead>Annual Rate</TableHead><TableHead>Effective Date (WIB)</TableHead><TableHead>Created (WIB)</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Annual Rate</TableHead><TableHead>6-mo Payout</TableHead><TableHead>12-mo Payout</TableHead><TableHead>Effective Date (WIB)</TableHead><TableHead>Created (WIB)</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {(() => {
                         const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
