@@ -548,7 +548,10 @@ const AdminPanel = () => {
                       <div className="space-y-2">
                         <Label>Annual Rate (%)</Label>
                         <Input type="number" min={0.01} step="0.01" value={newRate} onChange={(e) => setNewRate(e.target.value)} placeholder="0" />
-                        <p className="text-xs text-muted-foreground">Must be greater than 0.</p>
+                        <p className="text-xs text-muted-foreground">
+                          Must be greater than 0. Annual rate is split equally — 6-month payout = {(Number(newRate) / 2 || 0).toFixed(2)}%, 12-month payout = {(Number(newRate) / 2 || 0).toFixed(2)}%.
+                        </p>
+                        <p className="text-xs text-muted-foreground">A new history row is created; existing rates are never overwritten.</p>
                       </div>
                       <div className="space-y-2"><Label>Effective Date</Label><Input type="date" value={newRateDate} onChange={(e) => setNewRateDate(e.target.value)} /></div>
                       <Button className="w-full" disabled={!newRate || !newRateDate || Number(newRate) <= 0} onClick={async () => {
