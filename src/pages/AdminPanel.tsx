@@ -61,6 +61,12 @@ const AdminPanel = () => {
   const [disbMemberId, setDisbMemberId] = useState("");
   const [disbInvestmentId, setDisbInvestmentId] = useState("");
   const [viewNotification, setViewNotification] = useState<any>(null);
+  const [expandedDeposits, setExpandedDeposits] = useState<Set<string>>(new Set());
+  const toggleExpanded = (id: string) => setExpandedDeposits(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   const adminCall = useCallback(async (action: string, params: any = {}) => {
     const { data, error } = await supabase.functions.invoke("admin-api", {
