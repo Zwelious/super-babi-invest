@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { Fragment, useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { PiggyBank, Check, X, TrendingUp, Bell, Loader2 } from "lucide-react";
+import { PiggyBank, Check, X, TrendingUp, Bell, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -61,6 +61,12 @@ const AdminPanel = () => {
   const [disbMemberId, setDisbMemberId] = useState("");
   const [disbInvestmentId, setDisbInvestmentId] = useState("");
   const [viewNotification, setViewNotification] = useState<any>(null);
+  const [expandedDeposits, setExpandedDeposits] = useState<Set<string>>(new Set());
+  const toggleExpanded = (id: string) => setExpandedDeposits(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   const adminCall = useCallback(async (action: string, params: any = {}) => {
     const { data, error } = await supabase.functions.invoke("admin-api", {
@@ -299,6 +305,7 @@ const AdminPanel = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-8"></TableHead>
                         <TableHead>Deposit ID</TableHead><TableHead>Member</TableHead><TableHead>Total</TableHead><TableHead>Activated</TableHead><TableHead>Outstanding</TableHead><TableHead>Deposit Date</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -307,8 +314,16 @@ const AdminPanel = () => {
                         const total = Number(d.amount);
                         const activated = Number(d.activated_amount || 0);
                         const outstanding = total - activated;
+                        const children = investments.filter(i => i.deposit_id === d.id);
+                        const isOpen = expandedDeposits.has(d.id);
                         return (
-                          <TableRow key={d.id}>
+                          <Fragment key={d.id}>
+                          <TableRow>
+                            <TableCell>
+                              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => toggleExpanded(d.id)} aria-label="Toggle details">
+                                {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                              </Button>
+                            </TableCell>
                             <TableCell className="font-mono text-xs">{d.id.slice(0, 8).toUpperCase()}</TableCell>
                             <TableCell className="font-medium">{d.member_name}</TableCell>
                             <TableCell>{formatRp(total)}</TableCell>
@@ -383,6 +398,44 @@ const AdminPanel = () => {
                               )}
                             </TableCell>
                           </TableRow>
+                          {isOpen && (
+                            <TableRow className="bg-muted/30 hover:bg-muted/30">
+                              <TableCell colSpan={9} className="py-3">
+                                <div className="pl-8">
+                                  <p className="text-xs font-semibold text-muted-foreground mb-2">Investment Details ({children.length})</p>
+                                  {children.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground">No investments activated from this deposit yet.</p>
+                                  ) : (
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead>Investment ID</TableHead>
+                                          <TableHead>Activation Date</TableHead>
+                                          <TableHead>Amount</TableHead>
+                                          <TableHead>6-Month Maturity</TableHead>
+                                          <TableHead>12-Month Maturity</TableHead>
+                                          <TableHead>Status</TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {children.map((inv) => (
+                                          <TableRow key={inv.id}>
+                                            <TableCell className="font-mono text-xs">{inv.id.slice(0, 8).toUpperCase()}</TableCell>
+                                            <TableCell>{inv.activation_date}</TableCell>
+                                            <TableCell className="font-medium">{formatRp(Number(inv.amount))}</TableCell>
+                                            <TableCell>{inv.maturity_6_date}</TableCell>
+                                            <TableCell>{inv.maturity_12_date}</TableCell>
+                                            <TableCell><Badge variant="outline">{inv.status}</Badge></TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                          </Fragment>
                         );
                       })}
                     </TableBody>
@@ -391,6 +444,7 @@ const AdminPanel = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
 
           {/* Disburse */}
           <TabsContent value="disburse">
