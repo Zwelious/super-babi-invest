@@ -426,7 +426,7 @@ const Dashboard = () => {
                       <span className="font-semibold text-primary">{formatRp(estimated6Month)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm">{t(`12-Month Return (${masterRate}%)`, `Pengembalian 12 Bulan (${masterRate}%)`)}:</span>
+                      <span className="text-sm">{t(`12-Month Return (${masterRate/2}%)`, `Pengembalian 12 Bulan (${masterRate/2}%)`)}:</span>
                       <span className="font-semibold text-primary">{formatRp(estimated12Month)}</span>
                     </div>
                   </CardContent>
