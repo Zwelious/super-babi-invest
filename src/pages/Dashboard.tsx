@@ -325,6 +325,7 @@ const Dashboard = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-8"></TableHead>
                     <TableHead>{t("Deposit ID", "ID Setoran")}</TableHead>
                     <TableHead>{t("Date", "Tanggal")}</TableHead>
                     <TableHead>{t("Units", "Unit")}</TableHead>
@@ -333,21 +334,70 @@ const Dashboard = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {deposits.map((d) => (
-                    <TableRow key={d.id}>
-                      <TableCell className="font-mono text-xs">{d.id.slice(0, 8).toUpperCase()}</TableCell>
-                      <TableCell>{d.deposit_date}</TableCell>
-                      <TableCell>{d.units}</TableCell>
-                      <TableCell>{formatRp(Number(d.amount))}</TableCell>
-                      <TableCell>
-                        <Badge variant={d.status === "approved" || d.status === "activated" ? "default" : d.status === "rejected" ? "destructive" : "secondary"}>
-                          {d.status === "activated" ? t("Activated", "Aktif") : d.status === "approved" ? t("Approved", "Disetujui") : d.status === "rejected" ? t("Rejected", "Ditolak") : t("Pending", "Menunggu")}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {deposits.map((d) => {
+                    const children = investments.filter((i) => i.deposit_id === d.id);
+                    const isOpen = expandedDeposits.has(d.id);
+                    return (
+                      <Fragment key={d.id}>
+                        <TableRow>
+                          <TableCell>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => toggleExpanded(d.id)} aria-label="Toggle details">
+                              {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                            </Button>
+                          </TableCell>
+                          <TableCell className="font-mono text-xs">{d.id.slice(0, 8).toUpperCase()}</TableCell>
+                          <TableCell>{d.deposit_date}</TableCell>
+                          <TableCell>{d.units}</TableCell>
+                          <TableCell>{formatRp(Number(d.amount))}</TableCell>
+                          <TableCell>
+                            <Badge variant={d.status === "approved" || d.status === "activated" ? "default" : d.status === "rejected" ? "destructive" : "secondary"}>
+                              {d.status === "activated" ? t("Activated", "Aktif") : d.status === "approved" ? t("Approved", "Disetujui") : d.status === "rejected" ? t("Rejected", "Ditolak") : t("Pending", "Menunggu")}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                        {isOpen && (
+                          <TableRow className="bg-muted/30 hover:bg-muted/30">
+                            <TableCell colSpan={6} className="py-3">
+                              <div className="pl-8">
+                                <p className="text-xs font-semibold text-muted-foreground mb-2">
+                                  {t("Investment Details", "Detail Investasi")} ({children.length})
+                                </p>
+                                {children.length === 0 ? (
+                                  <p className="text-sm text-muted-foreground">
+                                    {t("No investments activated from this deposit yet.", "Belum ada investasi yang diaktifkan dari setoran ini.")}
+                                  </p>
+                                ) : (
+                                  <Table>
+                                    <TableHeader>
+                                      <TableRow>
+                                        <TableHead>{t("Activation Date", "Tanggal Aktivasi")}</TableHead>
+                                        <TableHead>{t("Amount", "Jumlah")}</TableHead>
+                                        <TableHead>{t("6-Month Maturity", "Jatuh Tempo 6 Bulan")}</TableHead>
+                                        <TableHead>{t("12-Month Maturity", "Jatuh Tempo 12 Bulan")}</TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {children.map((inv) => (
+                                        <TableRow key={inv.id}>
+                                          <TableCell>{inv.activation_date}</TableCell>
+                                          <TableCell className="font-medium">{formatRp(Number(inv.amount))}</TableCell>
+                                          <TableCell>{inv.maturity_6_date}</TableCell>
+                                          <TableCell>{inv.maturity_12_date}</TableCell>
+                                        </TableRow>
+                                      ))}
+                                    </TableBody>
+                                  </Table>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </Fragment>
+                    );
+                  })}
                 </TableBody>
               </Table>
+
             </CardContent>
           </Card>
         )}
