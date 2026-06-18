@@ -602,6 +602,8 @@ const AdminPanel = () => {
                           return (
                             <TableRow key={r.id}>
                               <TableCell className="font-bold text-lg">{r.rate}%</TableCell>
+                              <TableCell className="text-primary font-semibold">{(Number(r.rate) / 2).toFixed(2)}%</TableCell>
+                              <TableCell className="text-primary font-semibold">{(Number(r.rate) / 2).toFixed(2)}%</TableCell>
                               <TableCell>{r.effective_date}</TableCell>
                               <TableCell className="text-muted-foreground text-sm">{created} WIB</TableCell>
                               <TableCell>
